@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameTick } from './useGameTick';
-import { S } from '../game/save';
+import { S, save } from '../game/save';
 import { setCtrl } from '../game/control';
 import { openEventHub } from '../game/eventhub';
 import { openGiftTab, towerStart, unlocked } from '../game/rewards';
@@ -120,6 +120,7 @@ export default function ModeMenu() {
     uiSfx('click');
     if (key === 'farm') {
       setCtrl('auto');
+      save();
       toast('Đã bật tự đánh tại bãi hiện tại');
     } else if (key === 'dg') {
       openEventHub('dg');
