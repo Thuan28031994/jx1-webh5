@@ -11,8 +11,9 @@ test.beforeEach(async ({ page }) => {
 });
 const assertNoErrors = () => expect(errors, errors.join('\n')).toEqual([]);
 
-test('mobile: modal vua chieu ngang, dung giua, UI khong bi xep', async ({ browser }) => {
+test('mobile: modal vua chieu ngang, dung giua, UI khong bi xep', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({
+    baseURL,
     viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, deviceScaleFactor: 2,
   });
@@ -22,7 +23,8 @@ test('mobile: modal vua chieu ngang, dung giua, UI khong bi xep', async ({ brows
   page.route('**/api/chat/messages*', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true, messages: [] }) }));
   page.route('**/api/chat/presence*', r => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ok: true }) }));
 
-  await page.goto('http://localhost:8917/');
+  // Use configured baseURL: 8917 for normal tests, 8937 for Patch 02.
+  await page.goto('/');
   await expect(page.locator('#pfName')).toBeVisible();
   await page.fill('#pfName', 'MobModal');
   await page.locator('.facpick button').first().click();

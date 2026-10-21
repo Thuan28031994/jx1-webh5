@@ -1,4 +1,6 @@
 import React from 'react';
+import ModeMenu from './ModeMenu';
+import MobileLandscapeFullscreen from './MobileLandscapeFullscreen';
 import { useGameTick } from './useGameTick';
 import { SK, W, J, clamp } from '../game/core';
 import { POT_TIER_LV, R } from '../game/combat';
@@ -75,6 +77,8 @@ export default function Battle() {
           </div>
         );
       })()}
+      <ModeMenu />
+      <MobileLandscapeFullscreen />
       <div id="autoControls" role="group" aria-label="Điều khiển tự động">
         <button id="autoSettingsBtn" title="Cài đặt Auto" aria-label="Cài đặt Auto"
           onClick={() => { uiSfx('click'); openAutoSettings(); }}><img src="ui/wrench.svg" alt="" aria-hidden="true" /></button>
