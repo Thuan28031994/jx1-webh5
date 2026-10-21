@@ -29,7 +29,7 @@ function stackUse(k, n = 1) { const s = stack(); if ((s[k] || 0) < n) return fal
 
 /* ---------- buff tt/qht: {p, until} — thời gian trôi cả khi đóng game ---------- */
 const buf = () => { const r = RW(); r.ktcBuf = r.ktcBuf || {}; return r.ktcBuf; };
-function buffAdd(k, p, minutes) { const b = buf(); const cur = b[k] && b[k].until > Date.now() ? b[k].p : 0; b[k] = { p: cur + p, until: Date.now() + minutes * 60000 }; save(); }
+export function addTimedBuff(k, p, minutes) { const b = buf(); const cur = b[k] && b[k].until > Date.now() ? b[k].p : 0; b[k] = { p: cur + p, until: Date.now() + minutes * 60000 }; save(); }   // cong buff theo phut (xp/luck) — kyngo.ts dung chung
 export const buffLuck = () => { const b = buf().luck; return b && b.until > Date.now() ? b.p : 0; };   // % may mắn (qht)
 export const buffXp = () => { const b = buf().xp; return b && b.until > Date.now() ? b.p : 0; };       // % kinh nghiệm (tt)
 
@@ -99,8 +99,8 @@ function openRda() {                                                     // rư�
 }
 export function ktcUse(k) {
   if (!stackHave(k)) return { ok: false, msg: '' };
-  if (k === 'tt') { stackUse(k); buffAdd('xp', 50, 60); return { ok: true, msg: 'Tiên Thảo Lộ: +50% kinh nghiệm trong 60 phút' }; }
-  if (k === 'qht') { stackUse(k); buffAdd('luck', 20, 60); return { ok: true, msg: 'Quế Hoa Tửu: +20 may mắn trong 60 phút' }; }
+  if (k === 'tt') { stackUse(k); addTimedBuff('xp', 50, 60); return { ok: true, msg: 'Tiên Thảo Lộ: +50% kinh nghiệm trong 60 phút' }; }
+  if (k === 'qht') { stackUse(k); addTimedBuff('luck', 20, 60); return { ok: true, msg: 'Quế Hoa Tửu: +20 may mắn trong 60 phút' }; }
   if (k === 'rngua') {
     stackUse(k);
     const { tier } = openRngua();
