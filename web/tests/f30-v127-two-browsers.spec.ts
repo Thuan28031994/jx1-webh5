@@ -28,8 +28,6 @@ async function mockWorker(ctx: BrowserContext) {
   });
   await ctx.routeWebSocket(/\/api\/mp\/socket/, ws => {
     connections++;
-    const protocols = ws.url(); // WebSocketRoute exposes url, no secrets ever logged.
-    const marker = 'mp-token.';
     const match = [...sessions.entries()].find(([token]) => {
       // The WS subprotocol is not exposed by routeWebSocket's url() API.
       // Associate by connection order: this test creates a single player at a time.
