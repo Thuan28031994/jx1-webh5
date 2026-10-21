@@ -11,7 +11,15 @@ name: Deploy web (Cloudflare)
 on:
   push:
     branches: [main]
-    paths: ['game/**', 'wrangler.jsonc', '.github/workflows/deploy-web.yml']
+    # Deploy only when runtime code/static-export changes.
+    # Importing binary Patch 01 media must NOT redeploy the upstream Worker.
+    paths:
+      - 'game/_next/**'
+      - 'game/index.html'
+      - 'game/style.css'
+      - 'game/manifest.json'
+      - 'game/js/**'
+      - 'wrangler.jsonc'
   workflow_dispatch:
 
 permissions:
