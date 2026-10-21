@@ -6,7 +6,8 @@ param(
     [string]$RepoRoot = "C:\Users\amecopain\VLI\vo-lam-idle",
     [string]$StagingDir = "D:\thuan\VLI-PATCH01-STAGING",
     [string]$ProjectName = "vli-thuan-2026",
-    [string]$Domain = "thuanlam.qzz.io"
+    [string]$Domain = "thuanlam.qzz.io",
+    [switch]$SkipMedia
 )
 
 Set-StrictMode -Version Latest
@@ -27,9 +28,13 @@ if (!(Get-Command "npm.cmd" -ErrorAction SilentlyContinue) -or
     throw "Node.js npm/npx is not installed or not on PATH."
 }
 
-Write-Host "=== Patch 01: add only previously missing supported media ==="
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $mediaScript -StagingDir $StagingDir -RepoRoot $RepoRoot -Apply
-if ($LASTEXITCODE -ne 0) { throw "Media import failed; production unchanged." }
+if ($SkipMedia) {
+    Write-Host "=== Skip media import (only if already applied and audited) ==="
+} else {
+    Write-Host "=== Patch 01: add only previously missing supported media ==="
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $mediaScript -StagingDir $StagingDir -RepoRoot $RepoRoot -Apply
+    if ($LASTEXITCODE -ne 0) { throw "Media import failed; production unchanged." }
+}
 
 Push-Location $web
 try {
@@ -38,7 +43,9 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "typecheck failed; production unchanged." }
 
     Write-Host "=== Build static site ==="
-    & npm.cmd run android:sync -- --out ../deploy
+    # sync-android.mjs resolves --out relative to REPOSITORY ROOT, not web/.
+    # Passing ../deploy would write outside this repo (to C:\Users\amecopain\VLI\deploy).
+    & npm.cmd run android:sync -- --out deploy
     if ($LASTEXITCODE -ne 0) { throw "Build failed; production unchanged." }
 
     Write-Host "=== Regression tests ==="
@@ -46,6 +53,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Regression tests failed; production unchanged." }
 
     $deploy = (Resolve-Path -LiteralPath (Join-Path $RepoRoot "deploy")).ProviderPath
+    Write-Host "Expected production build directory: $deploy"
     foreach ($p in @("index.html", "_next", "jdata\jx.json", "img")) {
         if (!(Test-Path -LiteralPath (Join-Path $deploy $p))) {
             throw "Build output is incomplete ($p); production unchanged."
