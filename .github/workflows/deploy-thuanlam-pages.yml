@@ -83,6 +83,9 @@ jobs:
             exit 1
           fi
 
+      - name: Verify complete Patch 01 SHA256 media baseline
+        run: node tools/verify-patch01-media.mjs patch02-test-out
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
         working-directory: web
