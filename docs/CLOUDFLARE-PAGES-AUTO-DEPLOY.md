@@ -6,44 +6,19 @@ Playwright, rồi direct-upload artifact đã kiểm thử lên Cloudflare Pages
 
 Workflow: `.github/workflows/deploy-thuanlam-pages.yml`.
 
-## Bật một lần (lưu ý quan trọng)
+## Trạng thái: đã bật chạy tự động
 
-Trước khi bật CI, **phải import đủ toàn bộ media Patch 01 lên GitHub**.
-Những tệp này hiện đang có ở máy Windows và trong Pages production, nhưng
-chưa được Git theo dõi ở repo:
+Đã merge đầy đủ 2.824 media Patch 01 lên `main`, kèm
+`docs/PATCH01-MEDIA-MANIFEST.json`. GitHub Actions kiểm tra
+SHA-256 của **tất cả** file trong manifest trước khi upload.
 
-- `game/fx/c2_101.webp`
-- `game/img/a/ani050_st.webp`
-- `game/img/jx/f/fm_bd_025_st05.webp`
-- `game/ui/jx1/`
+Workflow đã được bật mặc định: push/merge có thay đổi `web/**`,
+`game/**` hoặc chính workflow trên nhánh `main` sẽ kích hoạt.
+Không cần đặt biến `VLI_PAGES_AUTO_DEPLOY` nữa.
 
-Chính vì vậy workflow mặc định **TẮT**: nó sẽ không upload thiếu dữ liệu.
-Những tệp khác của Patch 01 cũng phải được commit lên GitHub, không chỉ ba
-file kiểm tra được liệt kê ở trên. Không dùng `git clean` hoặc
-`git reset --hard`.
-
-Trên Windows, sau khi chuyển sang main mới nhất và xác minh chỉ có các
-tài nguyên Patch 01 trong `game/fx`, `game/img`, `game/ui` đang untracked:
-
-```powershell
-cd C:\Users\amecopain\VLI\vo-lam-idle
-git fetch thuan
-git switch main
-git merge --ff-only thuan/main
-git status --short
-git ls-files --others --exclude-standard -- game/fx game/img game/ui
-# Chỉ tiếp tục khi đã rà soát file sẽ thêm:
-git add -- game/fx game/img game/ui
-git diff --cached --stat
-git diff --cached --name-status
-# Kiểm tra: chỉ file media cần thiết. Nếu thấy thay đổi bất ngờ,
-# bỏ stage theo từng file trước khi commit.
-git commit -m "Import Patch 01 media for Cloudflare CI"
-git push thuan main
-```
-
-Nếu thiếu file tài nguyên ở các thư mục khác (ví dụ `game/snd`,
-`game/music`, `game/fonts`), cũng phải import đủ trước khi bật.
+**Vẫn cần** hai GitHub Actions secrets Cloudflare hợp lệ và một lần
+chạy thành công để xác nhận triển khai thật. Chỉ có quyền GitHub
+repository không đủ để kiểm tra hoặc cấp lại secrets.
 
 ## Cloudflare credentials
 
@@ -56,14 +31,10 @@ tạo hai **repository secrets**:
 
 **Không paste token vào code, commit hoặc chat.**
 
-Sau khi toàn bộ media đã commit và secrets đã điền, tại
-**Settings -> Secrets and variables -> Actions -> Variables**, tạo biến:
-
-- `VLI_PAGES_AUTO_DEPLOY` = `true`
-
-Workflow tự chạy khi push/merge vào `main` có thay đổi `web/**`, `game/**`
-hoặc workflow deploy. Muốn chạy bản deploy đầu tiên ngay: GitHub ->
-**Actions -> Deploy thuanlam.qzz.io (Pages) -> Run workflow -> main**.
+Sau khi tạo secrets, kiểm tra job tại GitHub ->
+**Actions -> Deploy thuanlam.qzz.io (Pages)**. Workflow sẽ chạy tự động
+khi có commit mới phù hợp hoặc có thể chọn
+**Run workflow -> main** để xác minh ngay.
 
 ## Bảo vệ production
 
