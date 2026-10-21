@@ -32,17 +32,17 @@ export const WB_HP_X = 60;          // $C — máu Boss tuần ×60
 export const WB_MIN_LV = 20;
 const ROOM_LV_SPAN = 10;            // dw — quái mạnh dần qua phòng (+10 cấp)
 const ELITE_HP = 0.6, ELITE_DMG = 0.55;              // JC / qC
-const ARENA_MAP = 224;              // không có map riêng cho phó bản trong media -> dùng bí cảnh sa mạc (như Boss Thế Giới)
+const ARENA_MAP = 224;              // fallback khi thiếu thông tin vùng bản đồ; không dùng để thay toàn bộ phó bản
 
 /* ---------- 7 phó bản (bảng KC của nguồn) ---------- */
 export const DUNGEONS = [
   { id: 'dvc', map: 140, n: 'Dược Vương Cốc', lv: 20, rooms: 5, limit: 120, bossMul: 5, set: 0.2, horse: 0.08, fd: 8, item: 5, gold: 2500, knb: 2, pot: 5, d: 'Hang dược thảo bị độc nhân chiếm giữ. 4 phòng tinh anh, phòng 5 là trùm.' },
-  { id: 'tbk', map: 50, n: 'Thiên Bảo Khố', lv: 50, rooms: 6, limit: 150, bossMul: 6, set: 0.35, horse: 0.12, fd: 12, item: 6, gold: 6e3, knb: 3, pot: 8, d: 'Kho báu triều đình, lính canh tinh nhuệ. 5 phòng tinh anh, phòng 6 là trùm.' },
-  { id: 'lal', map: 8, n: 'Lâm An Hoàng Lăng', lv: 80, rooms: 7, limit: 210, bossMul: 7, set: 0.5, horse: 0.18, fd: 18, item: 6, gold: 12e3, knb: 4, pot: 10, d: 'Lăng mộ hoàng tộc, cơ quan trùng trùng. 6 phòng tinh anh, phòng 7 là trùm.' },
-  { id: 'pdq', map: 206, n: 'Phong Đô Quỷ Thành', lv: 110, rooms: 7, limit: 240, bossMul: 7, set: 0.55, horse: 0.2, fd: 22, item: 6, gold: 2e4, knb: 5, pot: 12, d: 'Thành ma nơi âm khí ngút trời. 6 phòng tinh anh, phòng 7 là trùm.' },
-  { id: 'kct', map: 4, n: 'Kiếm Các Thục Đạo', lv: 140, rooms: 8, limit: 270, bossMul: 8, set: 0.6, horse: 0.22, fd: 26, item: 6, gold: 3e4, knb: 6, pot: 14, d: 'Đường Thục hiểm trở, sơn tặc trấn ải. 7 phòng tinh anh, phòng 8 là trùm.' },
-  { id: 'mcb', map: 225, n: 'Mạc Cao Bí Cảnh', lv: 170, rooms: 8, limit: 300, bossMul: 7, set: 0.65, horse: 0.25, fd: 30, item: 6, gold: 45e3, knb: 7, pot: 16, d: 'Hang động cổ giữa sa mạc, cao thủ ẩn tu. 7 phòng tinh anh, phòng 8 là trùm.' },
-  { id: 'hsl', map: 212, n: 'Hoa Sơn Luận Kiếm', lv: 190, rooms: 9, limit: 330, bossMul: 7, set: 0.7, horse: 0.28, fd: 35, item: 6, gold: 6e4, knb: 8, pot: 20, d: 'Đỉnh Hoa Sơn, quần hùng tranh phong. 8 phòng tinh anh, phòng 9 là trùm.' },
+  { id: 'tbk', map: 75, fallbackMap: 50, spawn: [2128, 1384], n: 'Thiên Bảo Khố', lv: 50, rooms: 6, limit: 150, bossMul: 6, set: 0.35, horse: 0.12, fd: 12, item: 6, gold: 6e3, knb: 3, pot: 8, d: 'Kho báu triều đình, lính canh tinh nhuệ. 5 phòng tinh anh, phòng 6 là trùm.' },
+  { id: 'lal', map: 201, fallbackMap: 8, spawn: [1232, 2152], n: 'Lâm An Hoàng Lăng', lv: 80, rooms: 7, limit: 210, bossMul: 7, set: 0.5, horse: 0.18, fd: 18, item: 6, gold: 12e3, knb: 4, pot: 10, d: 'Lăng mộ hoàng tộc, cơ quan trùng trùng. 6 phòng tinh anh, phòng 7 là trùm.' },
+  { id: 'pdq', map: 205, fallbackMap: 206, spawn: [2512, 1064], n: 'Phong Đô Quỷ Thành', lv: 110, rooms: 7, limit: 240, bossMul: 7, set: 0.55, horse: 0.2, fd: 22, item: 6, gold: 2e4, knb: 5, pot: 12, d: 'Thành ma nơi âm khí ngút trời. 6 phòng tinh anh, phòng 7 là trùm.' },
+  { id: 'kct', map: 3, fallbackMap: 4, spawn: [2512, 1320], n: 'Kiếm Các Thục Đạo', lv: 140, rooms: 8, limit: 270, bossMul: 8, set: 0.6, horse: 0.22, fd: 26, item: 6, gold: 3e4, knb: 6, pot: 14, d: 'Đường Thục hiểm trở, sơn tặc trấn ải. 7 phòng tinh anh, phòng 8 là trùm.' },
+  { id: 'mcb', map: 225, spawn: [2384, 1384], n: 'Mạc Cao Bí Cảnh', lv: 170, rooms: 8, limit: 300, bossMul: 7, set: 0.65, horse: 0.25, fd: 30, item: 6, gold: 45e3, knb: 7, pot: 16, d: 'Hang động cổ giữa sa mạc, cao thủ ẩn tu. 7 phòng tinh anh, phòng 8 là trùm.' },
+  { id: 'hsl', map: 2, fallbackMap: 212, spawn: [2512, 1896], n: 'Hoa Sơn Luận Kiếm', lv: 190, rooms: 9, limit: 330, bossMul: 7, set: 0.7, horse: 0.28, fd: 35, item: 6, gold: 6e4, knb: 8, pot: 20, d: 'Đỉnh Hoa Sơn, quần hùng tranh phong. 8 phòng tinh anh, phòng 9 là trùm.' },
 ];
 /* thưởng rương theo hạng (bảng rw của nguồn) + hệ số thưởng cơ bản (iw) */
 const RANK_CHEST = { S: { gold: 1e4, fd: 50, set: 1, knb: 15, pts: 3 }, A: { gold: 6e3, fd: 30, set: 1, knb: 10 }, B: { gold: 3e3, fd: 20, item: 6, knb: 6 }, C: { gold: 1500, fd: 10, item: 5, knb: 3 } };
@@ -74,15 +74,20 @@ export const weekBossReady = () => !!S.fac;
 
 /* ---------- bí cảnh (khuôn goBossArena của worldboss) ---------- */
 function busy() { return !!(R.dg || R.tower || R.tk || R.tyvo || R.wbArena || R.deadT > 0); }
-function dgEnter(mapId) {
+function dgEnter(mapId, fallbackMap = null, spawn = null) {
   R.town = false; R.dgArena = true; R.enemies = []; R.corpses = []; R.pickTarget = null; R.moveTo = null;
-  /* nguồn gw(): chỉ nạp map khi JMO có geometry — không có thì GIỮ map đang đứng
-     (trước đây fallback Sa mạc 224 làm mọi phó bản chung một nền = "thiếu map").
-     Đi thuyền (337): JMO không có → giữ vật cản, nền img/z/336.jpg (Qw của nguồn). */
-  if (JMO && JMO[String(mapId)]) {
-    obsLoad(mapId);
-    H.x = WORLD.w / 2; H.y = WORLD.h / 2; snapCamera();
-    R.bgImg = img('img/z/' + mapId + '.jpg'); playMusic(mapId);
+  /* V12.7: ưu tiên bản đồ mới nếu JMO có geometry; giữ ID cũ làm fallback.
+     Không đưa nhân vật vào map chưa tải dữ liệu; giữ vùng hiện tại nếu thiếu cả hai.
+     Riêng thuyền 337/336 giữ cơ chế nền dự phòng trước đó. */
+  const selected = JMO && JMO[String(mapId)] ? mapId
+    : fallbackMap != null && JMO && JMO[String(fallbackMap)] ? fallbackMap : null;
+  if (selected != null) {
+    obsLoad(selected);
+    const useSpawn = selected === mapId && Array.isArray(spawn) && spawn.length === 2;
+    H.x = useSpawn ? clamp(Number(spawn[0]) || WORLD.w / 2, 0, WORLD.w) : WORLD.w / 2;
+    H.y = useSpawn ? clamp(Number(spawn[1]) || WORLD.h / 2, 0, WORLD.h) : WORLD.h / 2;
+    snapCamera();
+    R.bgImg = img('img/z/' + selected + '.jpg'); playMusic(selected);
   } else if (mapId === 337 || mapId === 336) {
     R.bgImg = img('img/z/336.jpg');                      // Phong Lăng Độ
   }
@@ -161,8 +166,8 @@ export function dungeonStart(id) {
   if (guardBusy()) return false;
   if (S.lvl < d.lv && RW().stat.reborn <= 0) { toast(`Cần cấp ${d.lv}`); return false; }
   if (runsLeft(d) <= 0) { toast('Hết lượt phó bản hôm nay'); return false; }
-  dgSaveState().runs[d.id] = (dgSaveState().runs[d.id] || 0) + 1; save();
-  dgEnter(d.map);
+  // V12.7: chưa tiêu lượt khi vào. Chỉ tính lượt sau khi vượt phó bản.
+  dgEnter(d.map, d.fallbackMap, d.spawn);
   R.dg = { kind: 'dg', d, rooms: d.rooms, room: 1, t: 0, limit: d.limit, lv: Math.min(200, d.lv + ROOM_LV_SPAN) };
   R.banner = { t: 2.4, text: d.n, sub: `${d.rooms} phòng · ${d.limit} giây · quái cấp ${d.lv}–${d.lv + ROOM_LV_SPAN}` };
   log(`🏯 Dịch chuyển vào phó bản <b>${esc(d.n)}</b>.`);
@@ -231,7 +236,10 @@ export function dgVictory() {
   if (run.kind === 'wb') { wbEnd(true); return; }
   if (run.kind === 'boat') { boatVictory(); return; }
   if (!run.d) { dgExitArena(); save(); return; }   // tự vệ: run thiếu def thì thoát an toàn
-  const d = new Date(), secs = Math.round(run.t);
+  const secs = Math.round(run.t);
+  // V12.7: tiêu đúng một lượt mỗi lần hoàn thành, không tiêu khi thất bại / rời / timeout.
+  const progress = dgSaveState();
+  progress.runs[run.d.id] = (progress.runs[run.d.id] || 0) + 1;
   const rank = run.t <= run.limit * 0.5 ? 'S' : run.t <= run.limit * 0.75 ? 'A' : 'B';
   const mul = RANK_MUL[rank] || 1;
   const rec = dgRec();
@@ -342,7 +350,7 @@ export function dungeonBody(r) {
       <footer><span>${open ? `<b>${left}/${DG_TRIES}</b> lượt còn` : 'Chưa mở khóa'}</span>
       <button class="btn" data-dg="${d.id}" ${open && left && !busy() ? '' : 'disabled'}>${open ? (left ? 'Vào phó bản' : 'Hết lượt') : `Cần cấp ${d.lv}`}</button></footer></div>`;
   }).join('');
-  return `<p class="desc">Vào phó bản theo lượt — mỗi ngày ${DG_TRIES} lượt mỗi bản. Hoàn thành càng nhanh hạng càng cao (S ≤ 50% giờ, A ≤ 75%), thưởng càng lớn.</p>${cards}`;
+  return `<p class="desc">Mỗi ngày ${DG_TRIES} lượt hoàn thành cho mỗi phó bản; chỉ trừ lượt khi vượt ải thành công. Hoàn thành càng nhanh hạng càng cao (S ≤ 50% thời gian, A ≤ 75%), thưởng càng lớn.</p>${cards}`;
 }
 export function dungeonBind(reload) {
   document.querySelectorAll('#mBody [data-dg]').forEach(b => b.onclick = () => { if (dungeonStart(b.dataset.dg)) closeModal(); });
