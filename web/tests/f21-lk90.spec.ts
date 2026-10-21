@@ -7,6 +7,22 @@ test.beforeEach(async ({ page }) => {
   errors = [];
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  // F21 tests local skill progression only. Do not depend on the live
+  // cross-origin chat Worker, which may answer 403 on CI/Linux runners.
+  // Keep real browser resource / JS errors visible to assertNoErrors().
+  await page.route('**/api/chat/status', r => r.fulfill({
+    contentType: 'application/json', body: JSON.stringify({ ok: true, online: 0 }),
+  }));
+  await page.route('**/api/chat/stream*', r => r.fulfill({
+    contentType: 'text/event-stream', headers: { 'Cache-Control': 'no-store' },
+    body: 'event: ready\\ndata: {"messages":[],"online":0}\\n\\n',
+  }));
+  await page.route('**/api/chat/messages*', r => r.fulfill({
+    contentType: 'application/json', body: JSON.stringify({ ok: true, messages: [] }),
+  }));
+  await page.route('**/api/chat/presence*', r => r.fulfill({
+    contentType: 'application/json', body: JSON.stringify({ ok: true }),
+  }));
 });
 const assertNoErrors = () => expect(errors, errors.join('\n')).toEqual([]);
 
