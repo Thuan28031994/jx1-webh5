@@ -2,6 +2,7 @@ name: Deploy thuanlam.qzz.io (Pages)
 
 # Main is source-of-truth after merge. Unlike deploy-web.yml this deploys
 # Cloudflare PAGES vli-thuan-2026, not the upstream Cloudflare Worker.
+# Manual activation check (2026-10-21): trigger the normal guarded main-branch pipeline.
 on:
   push:
     branches: [main]
