@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   }));
   await page.route('**/api/chat/stream*', r => r.fulfill({
     contentType: 'text/event-stream', headers: { 'Cache-Control': 'no-store' },
-    body: 'event: ready\\ndata: {"messages":[],"online":0}\\n\\n',
+    body: 'event: ready\ndata: {"messages":[],"online":0}\n\n',
   }));
   await page.route('**/api/chat/messages*', r => r.fulfill({
     contentType: 'application/json', body: JSON.stringify({ ok: true, messages: [] }),
