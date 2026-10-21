@@ -20,9 +20,8 @@ concurrency:
 
 jobs:
   deploy:
-    # Guard is OFF until all local Patch 01 media have been committed and
-    # the Cloudflare repository secrets are configured (see docs).
-    if: vars.VLI_PAGES_AUTO_DEPLOY == 'true'
+    # Auto-deploy is enabled on main. Deployment stops before upload if
+    # credentials, static media integrity, build, or regression checks fail.
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
