@@ -14,7 +14,7 @@ import { ktcBadge } from './ktc';
 import { htModal } from './forge';
 import { forgeReadyCounts } from './auto';
 import { uiSfx } from './audio';
-import { tkBadge, ytBadge } from './activities';
+import { guildBadge, tkBadge, ytBadge } from './activities';
 import { tvVh } from './tyvo';
 
 /* ======================= SO TAY: thong ke 7 ngay gan nhat (luu trong save) =======================
@@ -87,7 +87,7 @@ function quickBarItems() {
     ['ui/quick/weekly-boss.png', 'Boss tuần', () => openEventHub('wb'), wbBadge],
     ['ui/quick/clan.png', 'Gia tộc', () => clanModal(), ''],
     ['ui/quick/quest.png', 'Dã Tẩu', () => openGiftTab('yt'), ytBadge()],
-    ['ui/quick/guild.png', 'Bang hội', () => openGiftTab('guild'), ''],
+    ['ui/quick/guild.png', 'Bang hội', () => openGiftTab('guild'), guildBadge()],
     ['ui/quick/journal.png', 'Sổ tay', () => jrModal(), ''],
     ['ui/quick/forge.png', 'Lò rèn', () => htModal(), forgeBadge()],
     ['ui/quick/storage.png', 'Kho', () => stashModal(), ''],
