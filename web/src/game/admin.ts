@@ -20,6 +20,7 @@ import { S, save } from './save';
 import { makeItem, makeRoom, slotFor } from './loot';
 import { makeSetItem } from './sets';
 import { RW } from './rewards';
+import { kyngoCallNow } from './kyngo';
 import { sexReqOk } from './stats';
 import { closeModal, itemHTML, log, modal, refresh, setInvDirty, toast } from './ui';
 
@@ -88,6 +89,9 @@ const ADMIN_OPTS = [
   { k: 'bk90', n: 'Tạo Võ Lâm Mật Tịch',
     d: 'Thêm sách vào hành trang để lĩnh ngộ hoặc luyện chiêu cấp 90 (sách xếp chồng, không chiếm ô)',
     fn: () => { adminBookModal(); return 'mở công cụ tạo sách'; } },
+  { k: 'kyngo', n: 'Gọi Kỳ Ngộ ngay',
+    d: 'Đặt đồng hồ Kỳ Ngộ Giang Hồ (f27) về 0 — kỳ ngộ xuất hiện ở tick tiếp theo nếu đang luyện công ngoài bãi và không bận hoạt động khác',
+    fn: () => { kyngoCallNow(); return 'Kỳ Ngộ sắp xuất hiện'; } },
 ];
 
 /* ---------- tao vat pham theo y + tao sach (nguon UE/qE cua v119) ---------- */
