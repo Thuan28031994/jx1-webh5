@@ -14,6 +14,7 @@ import { matAdd, matHave } from './recipes';
 import { CV, img, isMobileUI, resizeArena, snapCamera, draw, setCanvas } from './render';
 import { initWorldChat } from './chat';
 import { mpWire, mpTick } from './mpworld';
+import { presenceTick } from './presenceV127';
 import { AUD, sndCfg, audApply, audInit, uiSfx, playMusic, preloadZoneSounds, audioSuspendForBackground, audioResumeFromBackground } from './audio';
 import {
   curTab,
@@ -108,7 +109,8 @@ function frame(now) {
   if (S.fac && !document.hidden) {
     if (!R.town && !SV.on) jrAdd('sec', dt);              // so tay: giay choi that (khong tinh thanh / Luyen Cong)
     const gdt = dt * gameSpeed(); guard('mo phong', () => simulateFrame(gdt));
-    guard('mp', () => mpTick(dt));                        // Thế Giới multiplayer: gửi move + nội suy người chơi khác
+    guard('mp', () => mpTick(dt));
+    guard('presence-v127', () => presenceTick(dt));                        // Thế Giới multiplayer: gửi move + nội suy người chơi khác
     drawCnt = (drawCnt + 1) % (fullFps() ? 1 : saverStep());
     if (fullFps() || drawCnt === 0) guard('ve', () => drawLerp(gdt));
   }
