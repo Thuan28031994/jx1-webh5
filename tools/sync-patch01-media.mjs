@@ -83,7 +83,7 @@ let remoteHead;
 try { remoteHead = git(['rev-parse', 'thuan/main']); }
 catch { die('Run git fetch thuan first.'); }
 if (git(['rev-parse', 'HEAD']) !== remoteHead) die('main is not exactly thuan/main. Run git fetch thuan && git merge --ff-only thuan/main first.');
-if (existsSync(join(root, manifest)) || git(['ls-files', '--error-unmatch', manifest], { stdio: ['ignore','pipe','ignore'] })) {
+if (existsSync(join(root, manifest))) {
   die('Manifest already exists. Stop rather than overwrite an existing baseline.');
 }
 const payload = {
