@@ -5,7 +5,10 @@ import { addTimedBuff } from './ktc';
 import { H, R, heal, makeEnemy } from './combat';
 import { itemPower } from './loot';
 import { matAdd, matHave } from './recipes';
-import { achCheck, grant, giftText, RW, unlocked } from './rewards';
+import { achCheck, grant, giftText, openGiftTab, RW, unlocked } from './rewards';
+import { farmBind, farmBody, farmReadyCount, fpExpose } from './dongphu';
+import { marketBind, marketBody, mkBestMove, mkExpose } from './thuonghoi';
+import { bpBind, bpBody, bpExpose, bpInfo } from './dotpha';
 import { log, sellProtected, setInvDirty, toast } from './ui';
 import { SV } from './survival';
 import { backFromTown } from './control';
@@ -332,7 +335,7 @@ function tkBuy(i) {
 }
 
 /* ---------- giao dien (cac the moi cua nut qua tang) ---------- */
-export const ACT_TABS = [['yt', 'Dã Tẩu'], ['guild', 'Bang hội'], ['tk', 'Tống Kim']];
+export const ACT_TABS = [['yt', 'Dã Tẩu'], ['guild', 'Bang hội'], ['tk', 'Tống Kim'], ['farm', 'Động Phủ'], ['market', 'Thương Hội'], ['bp', 'Đột Phá']];
 export function actBody(tab) {
   if (tab === 'yt') {
     const y = ytState(), st = ytStep();
@@ -341,9 +344,12 @@ export function actBody(tab) {
       <button class="btn sm" id="ytGo" ${y.done ? '' : ytDeliverable() ? '' : 'disabled'}>${y.done ? 'Nhận' : st.t === 'item' || st.t === 'mats' ? 'Nộp' : 'Đang làm'}</button></div>`;
   }
   if (tab === 'guild') {
-    ghExpose();
-    const g = guildState(), b = guildBuff(), full = g.lv >= GUILD_MAX, c = guildCost(g.lv), pct = full ? 100 : Math.floor(g.gold / c * 100);
+    ghExpose(); fpExpose(); mkExpose(); bpExpose();
+    const g = guildState(), b = guildBuff(), full = g.lv >= GUILD_MAX, c = guildCost(g.lv), pct = full ? 100 : Math.floor(g.gold / c * 100), fpReady = farmReadyCount(), mkMove = mkBestMove(), bpInf = bpInfo();
     return `<p class="desc">Bang hội (NPC): đóng góp ngân lượng để lên cấp, mỗi cấp mở thêm buff nhỏ (tối đa cấp ${GUILD_MAX}: +10% kinh nghiệm, +10% sinh lực, +5% sát thương, +5 may mắn).</p>
+      <div class="btnrow"><button class="btn" id="fpGo">🌱 Động Phủ / Vườn Thuốc — trồng linh thảo theo thời gian${fpReady ? ` · <b>${fpReady} ô sẵn sàng thu hoạch!</b>` : ''}</button></div>
+      <div class="btnrow"><button class="btn" id="mkGo">🏮 Thương Hội / Chợ — mua bán theo giá biến động mỗi ngày${mkMove && mkMove.pct ? ` · <b>${esc(mkMove.name)} hôm nay ${mkMove.pct > 0 ? '▲ +' : '▼ '}${mkMove.pct}%</b>` : ''}</button></div>
+      <div class="btnrow"><button class="btn" id="bpGo">⚡ Đột Phá Cảnh Giới — đả thông kinh mạch, mỗi tầng +4% sức mạnh vĩnh viễn · <b>${esc(bpInf.name)}</b>${bpInf.chance != null ? ` · tỉ lệ tầng kế <b>${bpInf.chance}%</b>` : ' · 👑 ĐÃ ĐẠT ĐỈNH'}</button></div>
       <div class="card stats"><span>Cấp bang</span><span>${g.lv}/${GUILD_MAX}</span><span>Kinh nghiệm</span><span>+${b.xp}%</span><span>Sinh lực</span><span>+${b.life}%</span><span>Sát thương</span><span>+${b.dmg}%</span><span>May mắn</span><span>+${b.lucky}</span>
       <span>Tiến độ cấp kế</span><span>${full ? 'Tối đa' : fmt(g.gold) + ' / ' + fmt(c) + ' (' + pct + '%)'}</span></div>
       ${full ? '' : [c / 10, c / 2, c].map(a => `<div class="btnrow"><small>${fmt(a)} lượng</small><button class="btn" data-gd="${Math.round(a)}" ${S.gold >= a ? '' : 'disabled'}>Đóng góp</button></div>`).join('')}
@@ -356,6 +362,9 @@ export function actBody(tab) {
       <div class="btnrow">${R.tk ? '<button class="btn red" id="tkOut">Rời trận</button>' : !unlocked(30) ? '<button class="btn" disabled>Cần cấp 30</button>' : t.used ? '<button class="btn" disabled>Đã đánh tuần này</button>' : '<button class="btn" id="tkGo">Vào chiến trường</button>'}</div>
       ${TK_SHOP.map(([c, , txt], i) => `<div class="qrow"><span>${txt}</span><small>${c} lệnh</small><button class="btn sm" data-tk="${i}" ${tkTokens() >= c ? '' : 'disabled'}>Đổi</button></div>`).join('')}`;
   }
+  if (tab === 'farm') return farmBody();
+  if (tab === 'market') return marketBody();
+  if (tab === 'bp') return bpBody();
   return null;
 }
 export function actBind(refreshGift) {
@@ -363,6 +372,12 @@ export function actBind(refreshGift) {
   on('#ytGo', () => { const y = ytState(); if (y.done) ytClaim(); else { const r = ytDeliver(); toast(r.msg); } refreshGift(); });
   on('#tkGo', tkStart); on('#tkOut', () => { tkExit(false); refreshGift(); });
   on('#gbGo', gbossStart); on('#gbOut', () => { gbossExit(false, false); refreshGift(); });
+  on('#fpGo', () => openGiftTab('farm'));
+  on('#mkGo', () => openGiftTab('market'));
+  on('#bpGo', () => openGiftTab('bp'));
+  farmBind(refreshGift);
+  marketBind(refreshGift);
+  bpBind(refreshGift);
   document.querySelectorAll('#mBody [data-gd]').forEach(x => x.onclick = () => { const r = guildDonate(+x.dataset.gd); toast(r.msg); save(); refreshGift(); });
   document.querySelectorAll('#mBody [data-tk]').forEach(x => x.onclick = () => { tkBuy(+x.dataset.tk); refreshGift(); });
   document.querySelectorAll('#mBody [data-gq]').forEach(x => x.onclick = () => { const r = ghClaimQuest(+x.dataset.gq); if (!r.ok) toast(r.msg); refreshGift(); });
