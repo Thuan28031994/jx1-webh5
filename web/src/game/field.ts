@@ -14,14 +14,15 @@ import { goldBossDue, spawnGoldBoss } from './rewards';
 import { S } from './save';
 
 const COARSE = typeof matchMedia === 'function' && (matchMedia('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 700);
-export const FIELD_MOBS = { cell: 400, perCell: 2, max: COARSE ? 110 : 240, aggro: 240, leash: 520, wander: 50, respawn: 5.6 };
+/* f39 (2026-10-22): tang tan suat xuat hien quai theo yeu cau — mat do 2->3 quai/o, hoi sinh 5.6s->3.2s, tran tong 110/240->150/320 */
+export const FIELD_MOBS = { cell: 400, perCell: 3, max: COARSE ? 150 : 320, aggro: 240, leash: 520, wander: 50, respawn: 3.2 };
 /* Cờ chay: luu rieng tu toggle trong Cài đặt Auto. R.field chi sat khi dang o bãi (không tháp / Tống Kim / bí cảnh trum). */
 export const fieldMode = () => !!(S && S.fieldMode);
 export const fieldActive = () => fieldMode() && !!R.field && !R.tower && !R.tk && !R.wbArena && !R.petRealm && !R.mvboss;
 /* Hook gỡ lỗi (cùng kiểu window.__mini): xem bãi quái khi thử chế độ. */
-try { (window as any).__field = () => ({ mode: fieldMode(), active: fieldActive(), slots: R.field ? R.field.slots.length : 0, quest: R.field && R.field.quest, enemies: R.enemies.length, aggro: R.enemies.filter(e => e.aggro).length, zone: R.field && R.field.key }); } catch (e) { /* bo qua */ }
+try { (window as any).__field = () => ({ mode: fieldMode(), active: fieldActive(), mobs: FIELD_MOBS, slots: R.field ? R.field.slots.length : 0, quest: R.field && R.field.quest, enemies: R.enemies.length, aggro: R.enemies.filter(e => e.aggro).length, zone: R.field && R.field.key }); } catch (e) { /* bo qua */ }
 
-/* Chon điêm sinh: gom các o đi duoc vao thùng 400px, moi thùng lay 2 điêm cách nhau ≥48px, cách nhan vat >80px;
+/* Chon điêm sinh: gom các o đi duoc vao thùng 400px, moi thùng lay toi da FIELD_MOBS.perCell điêm cách nhau ≥48px, cách nhan vat >80px;
    vuot max thì lay mau đeu (không cat nửa bản đồ) để bãi quái phân bố đều khắp vung. */
 function fieldSpawnPoints() {
   const buckets = new Map(), g = OBS.g, pad = WORLD.pad + 32;
@@ -97,7 +98,7 @@ function fieldTick(dt) {
   if (goldBossDue() && !R.enemies.some(e => e.goldBoss && !e.dead)) spawnGoldBoss();
 }
 function fieldKilled(e) {
-  if (e.fieldSlot) { e.fieldSlot.enemy = null; e.fieldSlot.wait = FIELD_MOBS.respawn + rnd(0, 2.8); }
+  if (e.fieldSlot) { e.fieldSlot.enemy = null; e.fieldSlot.wait = FIELD_MOBS.respawn + rnd(0, 1.6); }
   R.field.quest.kills++;
   R.stall = 0;
 }

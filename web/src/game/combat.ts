@@ -525,7 +525,7 @@ function waveCleared() {
   if (R.tk) { tkCleared(); return; }                       // Tong Kim: dot kep tiep / chien thang
   if (R.tower) { towerCleared(); return; }                 // thap thu thach: len tang, khong doi ai
   heal(R.P.life * 0.15, true); R.mana = Math.min(R.P.mana, R.mana + R.P.mana * 0.2); // dieu tuc giua cac dot
-  if (S.wave < WAVES) { S.wave++; R.spawnT = 1.2; return; }
+  if (S.wave < WAVES) { S.wave++; R.spawnT = 0.7; return; }
   S.wave = 1;
   if (!S.push && ++R.farm >= 3 && R.life > R.P.life * 0.6) { S.push = true; R.farm = 0; log('Đủ mạnh, thử vượt ải tiếp.'); }
   if (S.push) {
