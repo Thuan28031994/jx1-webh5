@@ -31,10 +31,42 @@ export let CV, CX, DPR = 1;
 /* Canvas do React gan vao sau khi mount (ui/Battle.jsx) — loop.js goi trong boot() */
 export function setCanvas(el) { CV = el; CX = el.getContext('2d'); }
 export const MON_SCALE = 1.4, HERO_SCALE = 1.35; // bang hoat anh xuat o 0.6 kich thuoc goc
+/* Scale nhan vat ghep JX tren san dau (f36): khung JX goc rat nho — chieu cao thay duoc cua nhan vat
+   dung yen chi ~44 don vi tinh tu neo chan (jxlook foot), nen he so cu HERO_SCALE*0.6 = 0.81 chi ve
+   duoc ~36px, trong khi quai thuong (khung 'st' trung vi 80px x 0.8 x MON_SCALE 1.4) cao ~90px
+   -> nhan vat nho hon han quai. JX_HERO_SCALE 2.25 -> ~99px ≈ 1.1 lan quai thuong; boss (khung to
+   x 1.15 x MON_SCALE) van lon hon nhan vat. Chi dung cho drawJxHero tren san; avatar header tu truyen
+   scale rieng, aura giu he so cu nhu nguon. */
+export const JX_HERO_SCALE = 2.25;
 /* quái bay (có height trong jw.json) lơ lửng trên mặt đất — như nguồn: y - (MON[tid].height||0) */
 const flyY = e => e.y - (MON[e.tid].height || 0);
 const IMG: Record<string, HTMLImageElement> = {};
 export function img(src) { if (!src) return null; let i = IMG[src]; if (!i) { i = new Image(); i.src = src; IMG[src] = i; } return i; }
+/* ---------- tai truoc sprite (f36): cache dung chung IMG — 1 Image moi URL, dung lai cho moi lan spawn ----------
+   Truoc day khong co preload cho QUAI: sheet hoat anh img/a/*.webp (trung vi ~80 KB / file, moi quai
+   toi 5 sheet st/run/at/hurt/die) chi bat dau tai khi quai xuat hien lan dau -> ve vong tron mau thay
+   the roi "nhay" hinh (pop-in); sheet hanh dong khac lai pop tiep giua tran. Gio tai truoc theo bai. */
+export function getSprite(src) { return img(src); }
+export function preloadSprites(urls) { if (!urls) return; for (const u of urls) if (u) img(u); }
+/* Tai truoc toan bo hinh cua 1 loai quai: anh tinh (img/m) + moi sheet hoat anh trong W.anim */
+export function preloadMobSprites(tid) {
+  const m = MON[tid]; if (!m) return;
+  if (m.img) img(m.img);
+  const set = W.anim && W.anim[m.anim];
+  if (set) for (const a in set) { const s = set[a]; if (s && s.f) img('img/a/' + s.f); }
+}
+/* Bai nao thi quai do: moi mode (bai luyen, Tong Kim, Boss Bang, Ma Vuong, Boss The Gioi) deu lay
+   quai tu z.m + z.boss cua mot zone -> preload theo zone la bao phu het */
+export function preloadZoneSprites(z) { if (!z) return; for (const tid of (z.m || [])) preloadMobSprites(tid); if (z.boss != null) preloadMobSprites(z.boss); }
+/* Hinh nhan vat mon phai (duong fallback cua drawAnim + anh tinh) — phan ghep JX da co jxPreload rieng */
+export function preloadHeroSprites() {
+  const hw = W.hero && S.fac && W.hero[S.fac]; if (!hw) return;
+  if (hw.img) img(hw.img);
+  const set = W.anim && W.anim[hw.anim];
+  if (set) for (const a in set) { const s = set[a]; if (s && s.f) img('img/a/' + s.f); }
+}
+/* debug/test (nho, vo hai): xem he so scale + trang thai cache sprite tu console / E2E */
+try { (window as any).__sprite = () => ({ jxHero: JX_HERO_SCALE, hero: HERO_SCALE, mon: MON_SCALE, cached: Object.keys(IMG).length, has: u => !!IMG[u], ready: u => { const i = IMG[u]; return !!(i && i.complete && i.naturalWidth); } }); } catch (e) { /* bo qua */ }
 export function addText(x, y, t, color, size = 12) { const max = S.lowFx ? 20 : 60; if (R.quiet || R.txt.length > max) return; R.txt.push({ x, y, t, color, size, life: S.lowFx ? 0.6 : 0.9 }); }
 export function burst(x, y, color) { if (R.quiet) return; R.fx.push({ k: 'ring', x, y, color, life: 0.45, max: 0.45 }); }
 export function fxLine(a, b, atk) {
@@ -357,7 +389,7 @@ export function draw(dt) {
       stepAct(H, dt, H.moving ? 'run' : 'st');
       if (R.deadT > 0) setAct(H, 'die'); else if (H.act !== 'at' && H.act !== 'hurt') setAct(H, H.moving ? 'run' : 'st');
       // nhan vat ghep bo phan (look.ts, du lieu img/jx): co thi ve truoc, thieu thi roi ve hinh mon phai cu
-      const jxH = R.jx ? drawJxHero(H.act || 'st', H.dir || 0, H.actT || 0, H.x, H.y, HERO_SCALE * 0.6, R.deadT > 0 ? 0.35 : 1, H.animKey) : false;
+      const jxH = R.jx ? drawJxHero(H.act || 'st', H.dir || 0, H.actT || 0, H.x, H.y, JX_HERO_SCALE, R.deadT > 0 ? 0.35 : 1, H.animKey) : false;
       const drawn = jxH !== false ? jxH : (hw && hw.anim && drawAnim(hw.anim, H.act || 'st', H.dir || 0, H.actT || 0, H.x, H.y, HERO_SCALE));
       const tw = titleWorn();
       // danh hieu tren ten (2 dong rieng): «Ten danh hieu» o tren, ten nhan vat o duoi
