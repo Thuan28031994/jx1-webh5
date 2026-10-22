@@ -71,6 +71,7 @@ import { backFromBossArena, wbTick, wbVictory } from './worldboss';
 import { dgTick, dgRoomCleared, dgFail } from './hoatdong';
 import { kyngoTick } from './kyngo';
 import { mvAddDamage, mvbossFinish, mvbossTick, mvbossVictory } from './mavuong';
+import { dtTick } from './detu';
 import { ktcOnBossKill, buffXp } from './ktc';
 import { tyvoDamageCap, tyvoDailyTick, tyvoFighterAI, tyvoSpawnOpponent, tyvoStop, tyvoWin } from './tyvo';
 import { S } from './save';
@@ -402,7 +403,7 @@ export function tick(dt) {
   for (const k of ['poisonT', 'burnT', 'coldT']) if (H[k] > 0) H[k] = Math.max(0, H[k] - dt);   // status tren nhan vat (Doc / Dong / Hoa cua Tuyet chieu)
   if (R.tpCd > 0) R.tpCd -= dt;
   if (R.potCd) { R.potCd.life = Math.max(0, R.potCd.life - dt); R.potCd.mana = Math.max(0, R.potCd.mana - dt); }
-  goldBossTick(dt); petTick(dt); wbTick(dt); dgTick(dt); kyngoTick(dt); mvbossTick(dt);  // phan thuong: trum Hoang Kim, dong hanh, Boss The Gioi, Hoat dong giang ho, Ky Ngo (f27), Ma Vuong (f35)
+  goldBossTick(dt); petTick(dt); wbTick(dt); dgTick(dt); kyngoTick(dt); mvbossTick(dt); dtTick();  // phan thuong: trum Hoang Kim, dong hanh, Boss The Gioi, Hoat dong giang ho, Ky Ngo (f27), Ma Vuong (f35), De Tu (f37)
   if (R.town) { townTick(dt); return; }                                // trong thanh (Tho Dia Phu)
   if (fieldActive()) fieldTick(dt);                                    // bãi quái: sinh lai o trống (field.ts)
   R.activeT = (R.activeT || 0) + dt;                                    // thoi gian danh quai thuc (không tinh tab an, trong thanh, Luyen Công) -> S.kps
