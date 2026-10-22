@@ -120,6 +120,7 @@ import {
   reqProblems,
   sexOk,
   sexReqOk,
+  skillLv,
   weaponCode,
   wrongFaction,
 } from './stats';
@@ -922,7 +923,7 @@ function supportIn(id) {
     const s = SK[sid]; if (!s) continue;
     for (const name in s.attr || {}) {
       if (!/^addskilldamage/.test(name)) continue;
-      const p = skVal(s, name, Math.max(1, S.sk[sid] || 1)); if (!p || +p[0] !== +id) continue;
+      const p = skVal(s, name, Math.max(1, skillLv(sid))); if (!p || +p[0] !== +id) continue;
       out.push({ id: sid, n: s.n, learned: !!S.sk[sid], pct: p[2] || 0 });
     }
   }
@@ -934,7 +935,10 @@ function skillModal(id) {
   const s = SK[id]; if (!s) return;
   const is90 = String(s.learn) === '90';
   const lk = (RW().lk90 || {}).lv || {};
-  const L = is90 ? (lk[id] || 0) : (S.sk[id] || 0), act = isAttack(s), show = Math.max(1, L), next = L < s.max ? L + 1 : 0;
+  const L = is90 ? (lk[id] || 0) : (S.sk[id] || 0), act = isAttack(s);
+  /* Cap hieu luc gom +cap tu trang bi (allskill_v): muc "Hieu qua hien tai" + the sat thuong
+     phai tinh theo cap nay — dung cap hoc goc o day khien dong cong cap nhin nhu khong hoat dong */
+  const effL = is90 ? L : (L ? skillLv(id) : 0), show = Math.max(1, effL), next = L < s.max ? effL + 1 : 0;
   const lines = (lv) => skillEffectLines(s, lv).map(t => `<div class="skill-effect-row">${escRich(t)}</div>`).join('') || '<div class="skill-effect-empty">Chưa có thuộc tính ở cấp này.</div>';
   let atk = '';
   if (act) {
@@ -947,7 +951,7 @@ function skillModal(id) {
   const inHTML = inc.length ? `<section class="skill-level-card skill-damage-incoming"><header class="skill-level-head"><b>Được hỗ trợ</b></header><p class="skill-damage-note">Tổng hỗ trợ từ các chiêu đã học; các mức % được cộng dồn.</p>${inc.map(o => `<div class="skill-damage-row${o.learned ? '' : ' is-inactive'}"><button type="button" class="skill-damage-link" data-support-skill="${o.id}">${esc(o.n)}</button><b>${pctText(o.pct)}</b><small>${o.learned ? 'Đã học' : 'Chưa học'}</small></div>`).join('')}</section>` : '';
   const buffHint = skillBuffHint(s) || skillAuraHint(s);
   modal(`<div class="skill-detail">
-    <header class="skill-detail-header"><div class="skill-detail-identity">${s.ic ? `<img class="skill-detail-icon" src="${esc(s.ic)}" alt="" draggable="false">` : '<span class="skill-detail-icon skill-detail-icon-fallback" aria-hidden="true">⚔</span>'}<h3>${esc(s.n)}</h3></div><small class="skill-detail-level">${L}/${s.max}</small></header>
+    <header class="skill-detail-header"><div class="skill-detail-identity">${s.ic ? `<img class="skill-detail-icon" src="${esc(s.ic)}" alt="" draggable="false">` : '<span class="skill-detail-icon skill-detail-icon-fallback" aria-hidden="true">⚔</span>'}<h3>${esc(s.n)}</h3></div><small class="skill-detail-level">${L}${effL > L ? '+' + (effL - L) : ''}/${s.max}</small></header>
     <p class="skill-detail-desc">${esc(s.d || 'Không có mô tả.')}</p>
     <div class="skill-detail-facts"><span class="skill-detail-kind is-${kind}">${skillTypeLabel(s)}</span><span class="skill-detail-fact"><small>Yêu cầu</small><b>Cấp ${s.req}</b>${S.lvl < s.req ? `<i>Bạn cấp ${S.lvl}</i>` : ''}</span>${is90 ? '<span class="skill-detail-fact"><small>Phân loại</small><b>Võ công bậc 90</b></span>' : `<span class="skill-detail-fact is-limit"><small>Giới hạn</small><b>Cấp ${s.max}</b></span>`}${buffHint ? `<span class="skill-detail-fact"><small>Trạng thái</small><b>${esc(buffHint)}</b></span>` : ''}</div>
     ${outHTML}${inHTML}${atk}
@@ -969,7 +973,7 @@ function renderSkill() {
   const f = FAC[S.fac];
   const rows = f.skills.map(id => {
     const s = SK[id], L = S.sk[id] || 0, act = isAttack(s);
-    const a = act && L ? activeInfo(R.P, s, L) : null;
+    const a = act && L ? activeInfo(R.P, s, skillLv(id)) : null;   // sat thuong hien thi theo cap hieu luc (gom +cap trang bi)
     const kind = skKind(s), hint = skillBuffHint(s) || skillAuraHint(s);
     return `<div class="skl${S.lvl < s.req ? ' lock' : ''}${R.P.main.id === +id ? ' main' : ''}" data-id="${id}">
       <img class="sic" src="${esc(s.ic || '')}" alt=""><div class="info"><b>${esc(s.n)}</b> <span class="tag${act ? ' attack' : kind !== 'passive' && kind !== 'none' ? ' ' + kind : ''}">${skillTypeLabel(s)}</span>

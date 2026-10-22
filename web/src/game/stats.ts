@@ -80,7 +80,14 @@ export function weaponCode(eq) {
   // 5 song dao / thich, 7 am khi, 9 tay khong / trien thu
   return w.d === 1 ? 7 : w.k === 6 ? 9 : w.k;
 }
-function skillLv(id) { const L = S.sk[id] || 0; return L ? L + (R.P ? R.P.plusSkill : 0) : 0; }
+/* Cap hieu luc cua mot ky nang DA HOC: cap hoc + cong don allskill_v tu trang bi —
+   P.plusSkill (dong generic, tham so 3 = 0) + P.skAdd[id] (dong rieng tung chieu, tham so 3 = id chieu).
+   Moi noi can "cap chieu luc dung" (thi trien bua loi / bua hai / vong sang, hien thi bang ky nang)
+   deu phai qua ham nay: truoc day skillsys / ui / survival tu cong tay CHI voi plusSkill nen dong
+   +cap rieng cho mot chieu khong bao gio toi duoc luc tung chieu, con bang ky nang tinh sat thuong
+   theo cap goc — nguoi choi thay dong cong cap "khong hoat dong". (calc() co lvOf noi bo rieng vi
+   khi tinh P chua ton tai.) */
+export function skillLv(id) { const L = S.sk[id] || 0; return L ? L + (R.P ? (R.P.plusSkill || 0) + ((R.P.skAdd && R.P.skAdd[id]) || 0) : 0) : 0; }
 
 /* Ky nang bi dong: mon vu khi (chi tinh khi dung dung loai vu khi), noi cong, hao quang... */
 function passiveApplies(s, name, p, wc) {
