@@ -1,8 +1,11 @@
 /* F36 — fix sprite (render.ts + loop.ts):
    (1) Nhân vật ghép JX từng bị vẽ ở HERO_SCALE*0.6 = 0.81 -> cao ~36px trong khi quái thường
-       (khung 'st' trung vị 80px × 0.8 × MON_SCALE 1.4) cao ~90px. Nay dùng JX_HERO_SCALE riêng
-       -> hero cao ngang/trên quái thường một chút, boss vẫn lớn hơn. Test tính từ DỮ LIỆU game
-       (jw.json + jxlook.json) nhân hệ số thật phơi qua __sprite() — không đo pixel canvas.
+       (khung 'st' trung vị 80px × 0.8 × MON_SCALE) cao ~90px. Nay dùng JX_HERO_SCALE riêng
+       -> hero cao ngang/trên quái thường một chút, boss vẫn lớn hơn. Cân bằng lại theo map:
+       MON_SCALE 1.4 -> 1.0 nên quái thường còn 64px (dải mục tiêu 55-70px, vì #battle chỉ
+       chiếm 46% chiều cao app), JX_HERO_SCALE 2.25 -> 1.6 nên hero ~70px ≈ 1.1× quái thường.
+       Test tính từ DỮ LIỆU game (jw.json + jxlook.json) nhân hệ số thật phơi qua __sprite()
+       — không đo pixel canvas.
    (2) Pop-in hình quái: trước đây không có preload, sheet img/a/*.webp chỉ tải khi quái xuất hiện.
        Nay onZoneChange preload toàn bộ sprite của quái thuộc bãi (+ bãi theo cấp cho các mode boss)
        vào cache dùng chung. Test chỉ kiểm tra CÓ MẶT trong cache — không phụ thuộc tốc độ mạng.
@@ -61,7 +64,9 @@ test('sprite: nhân vật JX cao ngang/trên quái thường (từ dữ liệu g
   });
   expect(r.med).toBeGreaterThan(0);
   expect(r.heroNative).toBeGreaterThan(30);                    // dữ liệu neo chân hợp lệ (~44)
-  expect(r.jxHero).toBeGreaterThan(2);                         // hệ số cũ 0.81 đã bị bỏ
+  expect(r.jxHero).toBeGreaterThan(1.2);                       // hệ số cũ 0.81 đã bị bỏ (nay 1.6)
+  expect(r.mobDrawn).toBeGreaterThanOrEqual(55);               // dải tuyệt đối theo map: quái thường
+  expect(r.mobDrawn).toBeLessThanOrEqual(70);                  // 55-70px (80 × 0.8 × MON_SCALE 1.0 = 64)
   expect(r.heroDrawn).toBeGreaterThanOrEqual(r.mobDrawn);      // hero >= quái thường
   expect(r.heroDrawn).toBeLessThanOrEqual(r.mobDrawn * 1.35);  // nhưng không phóng đại vô lý
   assertNoErrors();

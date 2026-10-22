@@ -30,14 +30,21 @@ import { heroSeries } from './stats';
 export let CV, CX, DPR = 1;
 /* Canvas do React gan vao sau khi mount (ui/Battle.jsx) — loop.js goi trong boot() */
 export function setCanvas(el) { CV = el; CX = el.getContext('2d'); }
-export const MON_SCALE = 1.4, HERO_SCALE = 1.35; // bang hoat anh xuat o 0.6 kich thuoc goc
-/* Scale nhan vat ghep JX tren san dau (f36): khung JX goc rat nho — chieu cao thay duoc cua nhan vat
-   dung yen chi ~44 don vi tinh tu neo chan (jxlook foot), nen he so cu HERO_SCALE*0.6 = 0.81 chi ve
-   duoc ~36px, trong khi quai thuong (khung 'st' trung vi 80px x 0.8 x MON_SCALE 1.4) cao ~90px
-   -> nhan vat nho hon han quai. JX_HERO_SCALE 2.25 -> ~99px ≈ 1.1 lan quai thuong; boss (khung to
-   x 1.15 x MON_SCALE) van lon hon nhan vat. Chi dung cho drawJxHero tren san; avatar header tu truyen
-   scale rieng, aura giu he so cu nhu nguon. */
-export const JX_HERO_SCALE = 2.25;
+export const MON_SCALE = 1.0, HERO_SCALE = 1.35; // bang hoat anh xuat o 0.6 kich thuoc goc
+/* Scale tong the tren san dau (f36 + can bang lai theo map): sprite ve 1:1 theo CSS px cua #arena,
+   ma #battle chi chiem 46% chieu cao app (style.css) nen AR.h thuong chi ~350-520px. Ban f36
+   (MON_SCALE 1.4) cho quai thuong = khung 'st' trung vi 80px x sc 0.8 x 1.4 ≈ 90px = 17-26% chieu
+   cao san -> chu bao ca quai lan nhan vat deu TO so voi map. Nay MON_SCALE 1.0: quai thuong 64px,
+   elite (sc 0.95) 76px, boss (sc 1.15, khung ~80px) 92px — khung boss to 101px -> 116px, boss van
+   lon nhat ro rang; pet dong hanh (0.75 x MON_SCALE o rewards.ts) tu co theo.
+   Scale nhan vat ghep JX: khung JX thay duoc chi ~44 don vi tinh tu neo chan (jxlook foot); he so
+   goc HERO_SCALE*0.6 = 0.81 chi ve duoc ~36px (loi f36: hero nho hon han quai). JX_HERO_SCALE 1.6
+   -> hero ~70px ≈ 1.1 lan quai thuong, giu ti le f36 (hero >= quai thuong, khong vuot boss).
+   HERO_SCALE GIU NGUYEN 1.35 cho duong fallback (anh mon phai, khung 'st' 46-71px -> ve 62-96px,
+   trung vi ~64px ≈ quai thuong va xap xi hero JX ~70px): neu giam ti le theo MON_SCALE
+   (1.35 x 1.0/1.4 ≈ 0.96) thi hero fallback trung vi chi con ~45px < quai thuong -> lap lai loi
+   f36 o duong nay. Aura (HERO_SCALE*0.6) va avatar header (tu truyen scale rieng) khong doi. */
+export const JX_HERO_SCALE = 1.6;
 /* quái bay (có height trong jw.json) lơ lửng trên mặt đất — như nguồn: y - (MON[tid].height||0) */
 const flyY = e => e.y - (MON[e.tid].height || 0);
 const IMG: Record<string, HTMLImageElement> = {};
