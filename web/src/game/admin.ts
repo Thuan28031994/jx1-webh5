@@ -90,6 +90,12 @@ const ADMIN_OPTS = [
   { k: 'bk90', n: 'Tạo Võ Lâm Mật Tịch',
     d: 'Thêm sách vào hành trang để lĩnh ngộ hoặc luyện chiêu cấp 90 (sách xếp chồng, không chiếm ô)',
     fn: () => { adminBookModal(); return 'mở công cụ tạo sách'; } },
+  { k: 'ttk', n: 'Tạo Tẩy Tủy Kinh',
+    d: 'Thêm sách vào túi nguyên liệu: dùng từ cấp 80 để cộng điểm tiềm năng, tối đa 15 cuốn mỗi nhân vật, điểm giữ qua chuyển sinh (sách xếp chồng)',
+    fn: () => { adminBookModal('ttk', 'Tẩy Tủy Kinh', 'Thêm sách vào túi nguyên liệu để dùng ở mục sách: từ cấp 80, cộng điểm tiềm năng (mỗi 2 cấp thêm 1, tối đa +5; đã chuyển sinh nhận +5). Tối đa 15 cuốn mỗi nhân vật. Sách xếp chồng, không chiếm thêm ô nếu đã có sẵn.'); return 'mở công cụ tạo sách'; } },
+  { k: 'vlmt', n: 'Tạo Dịch Căn Kinh',
+    d: 'Thêm sách vào túi nguyên liệu: dùng từ cấp 80 hoặc đã chuyển sinh, mỗi cuốn +1 điểm võ công, tối đa 15 cuốn mỗi nhân vật (sách xếp chồng)',
+    fn: () => { adminBookModal('vlmt', 'Dịch Căn Kinh', 'Thêm sách vào túi nguyên liệu để dùng ở mục sách: từ cấp 80 hoặc đã chuyển sinh, mỗi cuốn +1 điểm võ công. Tối đa 15 cuốn mỗi nhân vật. Sách xếp chồng, không chiếm thêm ô nếu đã có sẵn.'); return 'mở công cụ tạo sách'; } },
   { k: 'kyngo', n: 'Gọi Kỳ Ngộ ngay',
     d: 'Đặt đồng hồ Kỳ Ngộ Giang Hồ (f27) về 0 — kỳ ngộ xuất hiện ở tick tiếp theo nếu đang luyện công ngoài bãi và không bận hoạt động khác',
     fn: () => { kyngoCallNow(); return 'Kỳ Ngộ sắp xuất hiện'; } },
@@ -191,19 +197,21 @@ function adminItemCreator() {
     $id('aiBack').onclick = () => adminModal();
   });
 }
-function adminBookModal() {
-  modal(`<h3>Tạo Võ Lâm Mật Tịch</h3><p class="desc">Thêm sách vào hành trang để lĩnh ngộ hoặc luyện chiêu cấp 90. Sách xếp chồng, không chiếm thêm ô nếu đã có sẵn.</p>
-    <div class="row"><input type="number" id="aiBk90Count" min="1" max="999" step="1" value="10" aria-label="Số quyển muốn tạo"></div>
-    <div class="btnrow"><button class="btn" id="aiBk90Ok">Tạo vào hành trang</button><button class="btn" id="aiBk90Back">Quay lại bảng thử nghiệm</button></div>`, () => {
-    document.getElementById('aiBk90Ok').onclick = () => {
-      const n = clamp(Math.floor(+document.getElementById('aiBk90Count').value || 1), 1, 999);
-      matAdd('misc', 'bk90', n);
+/* Modal tao sach theo so luong: dung chung cho bk90 (Võ Lâm Mật Tịch), ttk (Tẩy Tủy Kinh),
+   vlmt (Dịch Căn Kinh) — ca ba deu la sach xep chong trong tui nguyen lieu (matAdd 'misc'). */
+function adminBookModal(key = 'bk90', name = 'Võ Lâm Mật Tịch', desc = 'Thêm sách vào hành trang để lĩnh ngộ hoặc luyện chiêu cấp 90. Sách xếp chồng, không chiếm thêm ô nếu đã có sẵn.') {
+  modal(`<h3>Tạo ${esc(name)}</h3><p class="desc">${esc(desc)}</p>
+    <div class="row"><input type="number" id="aiBookCount" min="1" max="999" step="1" value="10" aria-label="Số quyển muốn tạo"></div>
+    <div class="btnrow"><button class="btn" id="aiBookOk">Tạo vào hành trang</button><button class="btn" id="aiBookBack">Quay lại bảng thử nghiệm</button></div>`, () => {
+    document.getElementById('aiBookOk').onclick = () => {
+      const n = clamp(Math.floor(+document.getElementById('aiBookCount').value || 1), 1, 999);
+      matAdd('misc', key, n);
       save(); refresh();
-      toast(`Đã tạo ${n} Võ Lâm Mật Tịch`);
-      log('<span style="color:#8fe34a">[Thử nghiệm]</span> Đã tạo ' + n + ' Võ Lâm Mật Tịch');
+      toast(`Đã tạo ${n} ${name}`);
+      log('<span style="color:#8fe34a">[Thử nghiệm]</span> Đã tạo ' + n + ' ' + esc(name));
       adminModal();
     };
-    document.getElementById('aiBk90Back').onclick = () => adminModal();
+    document.getElementById('aiBookBack').onclick = () => adminModal();
   });
 }
 
