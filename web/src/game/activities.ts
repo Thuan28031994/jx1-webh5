@@ -9,6 +9,7 @@ import { achCheck, grant, giftText, openGiftTab, RW, unlocked } from './rewards'
 import { farmBind, farmBody, farmReadyCount, fpExpose } from './dongphu';
 import { marketBind, marketBody, mkBestMove, mkExpose } from './thuonghoi';
 import { bpBind, bpBody, bpExpose, bpInfo } from './dotpha';
+import { mvBind, mvBody, mvExpose, mvInfo } from './mavuong';
 import { log, sellProtected, setInvDirty, toast } from './ui';
 import { SV } from './survival';
 import { backFromTown } from './control';
@@ -209,7 +210,7 @@ function ghAddFunds(amount) {
 export function gbossStart() {
   if (R.tyvo) { toast('Hãy kết thúc Tỷ Võ trước khi vào Boss Bang'); return; }
   if (!S.fac || R.gboss || SV.on) return;
-  if (R.tk || R.dg || R.tower || R.wbArena) { toast('Hãy kết thúc hoạt động hiện tại trước khi vào Boss Bang'); return; }
+  if (R.tk || R.dg || R.tower || R.wbArena || R.mvboss) { toast('Hãy kết thúc hoạt động hiện tại trước khi vào Boss Bang'); return; }
   const b = ghBossState();
   if (b.tries >= GH_BOSS_TRIES) { toast('Đã hết lượt Boss Bang tuần này, thứ Hai quay lại'); return; }
   if (R.town) backFromTown();
@@ -286,7 +287,7 @@ function tkState() { const r = RW(); if (!r.tk || r.tk.week !== weekKey()) r.tk 
 function tkTokens() { const r = RW(); r.tkTok = r.tkTok || 0; return r.tkTok; }
 export function tkStart() {
   if (R.tyvo) { toast('Hãy kết thúc Tỷ Võ trước khi vào Tống Kim'); return; }
-  if (!S.fac || !unlocked(30) || R.tk || SV.on) return;
+  if (!S.fac || !unlocked(30) || R.tk || R.mvboss || SV.on) return;
   const t = tkState();
   if (t.used >= 1) { toast('Tuần này đã đánh Tống Kim rồi, thứ Hai quay lại'); return; }
   if (R.town) backFromTown();
@@ -335,11 +336,13 @@ function tkBuy(i) {
 }
 
 /* ---------- giao dien (cac the moi cua nut qua tang) ---------- */
-export const ACT_TABS = [['yt', 'Dã Tẩu'], ['guild', 'Bang hội'], ['tk', 'Tống Kim'], ['farm', 'Động Phủ'], ['market', 'Thương Hội'], ['bp', 'Đột Phá']];
+export const ACT_TABS = [['yt', 'Dã Tẩu'], ['guild', 'Bang hội'], ['tk', 'Tống Kim'], ['farm', 'Động Phủ'], ['market', 'Thương Hội'], ['bp', 'Đột Phá'], ['wboss', 'Ma Vương']];
 export function actBody(tab) {
   if (tab === 'yt') {
-    const y = ytState(), st = ytStep();
-    return `<p class="desc">Chuỗi nhiệm vụ Dã Tẩu (bước ${y.i + 1}): hút đồ thừa và nguyên liệu dư, thưởng nhỏ nhưng không giới hạn ngày.</p>
+    mvExpose();
+    const y = ytState(), st = ytStep(), mv = mvInfo();
+    return `<div class="btnrow"><button class="btn" id="mvGo">👹 Ma Vương Thảo Phạt — đua sát thương boss mỗi ngày · <b>${esc(mv.boss)}</b> (hệ ${esc(mv.elem)}) · tổng hôm nay <b>${fmt(mv.total)}</b> · hạng <b>${mv.rank}</b> · còn <b>${mv.left}</b> lượt</button></div>
+      <p class="desc">Chuỗi nhiệm vụ Dã Tẩu (bước ${y.i + 1}): hút đồ thừa và nguyên liệu dư, thưởng nhỏ nhưng không giới hạn ngày.</p>
       <div class="qrow"><span><b>${esc(st.txt)}</b><small>${giftText(st.rw)}</small></span><small>${y.have}/${st.n}</small>
       <button class="btn sm" id="ytGo" ${y.done ? '' : ytDeliverable() ? '' : 'disabled'}>${y.done ? 'Nhận' : st.t === 'item' || st.t === 'mats' ? 'Nộp' : 'Đang làm'}</button></div>`;
   }
@@ -365,6 +368,7 @@ export function actBody(tab) {
   if (tab === 'farm') return farmBody();
   if (tab === 'market') return marketBody();
   if (tab === 'bp') return bpBody();
+  if (tab === 'wboss') return mvBody();
   return null;
 }
 export function actBind(refreshGift) {
@@ -375,9 +379,11 @@ export function actBind(refreshGift) {
   on('#fpGo', () => openGiftTab('farm'));
   on('#mkGo', () => openGiftTab('market'));
   on('#bpGo', () => openGiftTab('bp'));
+  on('#mvGo', () => openGiftTab('wboss'));
   farmBind(refreshGift);
   marketBind(refreshGift);
   bpBind(refreshGift);
+  mvBind(refreshGift);
   document.querySelectorAll('#mBody [data-gd]').forEach(x => x.onclick = () => { const r = guildDonate(+x.dataset.gd); toast(r.msg); save(); refreshGift(); });
   document.querySelectorAll('#mBody [data-tk]').forEach(x => x.onclick = () => { tkBuy(+x.dataset.tk); refreshGift(); });
   document.querySelectorAll('#mBody [data-gq]').forEach(x => x.onclick = () => { const r = ghClaimQuest(+x.dataset.gq); if (!r.ok) toast(r.msg); refreshGift(); });
