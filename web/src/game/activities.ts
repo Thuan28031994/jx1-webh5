@@ -10,6 +10,7 @@ import { farmBind, farmBody, farmReadyCount, fpExpose } from './dongphu';
 import { marketBind, marketBody, mkBestMove, mkExpose } from './thuonghoi';
 import { bpBind, bpBody, bpExpose, bpInfo } from './dotpha';
 import { mvBind, mvBody, mvExpose, mvInfo } from './mavuong';
+import { dtBind, dtBody, dtExpose, dtInfo } from './detu';
 import { log, sellProtected, setInvDirty, toast } from './ui';
 import { SV } from './survival';
 import { backFromTown } from './control';
@@ -336,12 +337,13 @@ function tkBuy(i) {
 }
 
 /* ---------- giao dien (cac the moi cua nut qua tang) ---------- */
-export const ACT_TABS = [['yt', 'Dã Tẩu'], ['guild', 'Bang hội'], ['tk', 'Tống Kim'], ['farm', 'Động Phủ'], ['market', 'Thương Hội'], ['bp', 'Đột Phá'], ['wboss', 'Ma Vương']];
+export const ACT_TABS = [['yt', 'Dã Tẩu'], ['guild', 'Bang hội'], ['tk', 'Tống Kim'], ['farm', 'Động Phủ'], ['market', 'Thương Hội'], ['bp', 'Đột Phá'], ['wboss', 'Ma Vương'], ['detu', 'Đệ Tử']];
 export function actBody(tab) {
   if (tab === 'yt') {
-    mvExpose();
-    const y = ytState(), st = ytStep(), mv = mvInfo();
+    mvExpose(); dtExpose();
+    const y = ytState(), st = ytStep(), mv = mvInfo(), dt = dtInfo();
     return `<div class="btnrow"><button class="btn" id="mvGo">👹 Ma Vương Thảo Phạt — đua sát thương boss mỗi ngày · <b>${esc(mv.boss)}</b> (hệ ${esc(mv.elem)}) · tổng hôm nay <b>${fmt(mv.total)}</b> · hạng <b>${mv.rank}</b> · còn <b>${mv.left}</b> lượt</button></div>
+      <div class="btnrow"><button class="btn" id="dtGo">🧑‍🎓 Đệ Tử — thu nhận môn đồ · <b>${dt.n}/${dt.cap}</b> đệ tử${dt.pendingH >= 0.05 ? ` · có <b>${dt.pendingH}</b> giờ công chờ thu` : ''}</button></div>
       <p class="desc">Chuỗi nhiệm vụ Dã Tẩu (bước ${y.i + 1}): hút đồ thừa và nguyên liệu dư, thưởng nhỏ nhưng không giới hạn ngày.</p>
       <div class="qrow"><span><b>${esc(st.txt)}</b><small>${giftText(st.rw)}</small></span><small>${y.have}/${st.n}</small>
       <button class="btn sm" id="ytGo" ${y.done ? '' : ytDeliverable() ? '' : 'disabled'}>${y.done ? 'Nhận' : st.t === 'item' || st.t === 'mats' ? 'Nộp' : 'Đang làm'}</button></div>`;
@@ -369,6 +371,7 @@ export function actBody(tab) {
   if (tab === 'market') return marketBody();
   if (tab === 'bp') return bpBody();
   if (tab === 'wboss') return mvBody();
+  if (tab === 'detu') return dtBody();
   return null;
 }
 export function actBind(refreshGift) {
@@ -380,10 +383,12 @@ export function actBind(refreshGift) {
   on('#mkGo', () => openGiftTab('market'));
   on('#bpGo', () => openGiftTab('bp'));
   on('#mvGo', () => openGiftTab('wboss'));
+  on('#dtGo', () => openGiftTab('detu'));
   farmBind(refreshGift);
   marketBind(refreshGift);
   bpBind(refreshGift);
   mvBind(refreshGift);
+  dtBind(refreshGift);
   document.querySelectorAll('#mBody [data-gd]').forEach(x => x.onclick = () => { const r = guildDonate(+x.dataset.gd); toast(r.msg); save(); refreshGift(); });
   document.querySelectorAll('#mBody [data-tk]').forEach(x => x.onclick = () => { tkBuy(+x.dataset.tk); refreshGift(); });
   document.querySelectorAll('#mBody [data-gq]').forEach(x => x.onclick = () => { const r = ghClaimQuest(+x.dataset.gq); if (!r.ok) toast(r.msg); refreshGift(); });
