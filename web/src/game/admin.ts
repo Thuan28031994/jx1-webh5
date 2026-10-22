@@ -8,6 +8,7 @@
 import {
   ENH_MAX, FAC, INV_MAX, J, MAX_LEVEL, PTS_PER_LEVEL, SKILL_PTS_PER_LEVEL, STAGES,
   attrName,
+  attrText,
   clamp,
   esc,
   pick,
@@ -96,10 +97,18 @@ const ADMIN_OPTS = [
 
 /* ---------- tao vat pham theo y + tao sach (nguon UE/qE cua v119) ---------- */
 const affixMax = a => a.p.map(([mn, mx]) => mn === -1 && mx === -1 ? -1 : Math.max(mn, mx));
+/* Nhan dropdown phai la DUNG dong chu se in tren do: loot.ts render dong ma thuat bang
+   attrText(attrName(a), p) voi p map -1 -> 0, o gia tri mac dinh cua cong cu (max cua bac
+   cao nhat = affixMax). Truoc day nhan la `${a.n} · ${attrName(a.a)}` (ten bac + khoa tho
+   tieng Anh) — khong giong chu tren do nen kho chon. */
+const affixLabel = row => attrText(attrName(row.a), affixMax(row).map(v => v === -1 ? 0 : v)).replace(/<enter>/gi, ' · ');
 function affixOptions() {
   const best = {};
   for (const a of J.affix) if (!best[a.a] || a.lvl > best[a.a].lvl) best[a.a] = a;
-  return Object.values(best).sort((x, y) => String(x.n || attrName(x.a)).localeCompare(String(y.n || attrName(y.a))));
+  const pool = Object.values(best).map(row => ({ a: row.a, lbl: affixLabel(row) }));
+  const dup = {}; for (const o of pool) dup[o.lbl] = (dup[o.lbl] || 0) + 1;
+  for (const o of pool) if (dup[o.lbl] > 1) o.lbl += ` (#${o.a})`;   // trung nhan: gan id de phan biet
+  return pool.sort((x, y) => x.lbl.localeCompare(y.lbl));
 }
 function adminItemCreator() {
   const tierDef = clamp(Math.round(S.lvl / 12), 1, 10);
@@ -107,7 +116,7 @@ function adminItemCreator() {
   const opt = (v, l, sel) => `<option value="${v}"${sel ? ' selected' : ''}>${esc(l)}</option>`;
   const details = J.items.map((g, d) => opt(d, g.n, d === 2)).join('');
   const parts = d => (J.items[d] ? J.items[d].list : []).map(r => opt(r.k, `${r.n} · cấp ${r.lvl}`, false)).join('');
-  const aff = pool.map(a => opt(a.a, `${a.n || attrName(a.a)} · ${attrName(a.a)}`, false)).join('');
+  const aff = pool.map(o => opt(o.a, o.lbl, false)).join('');
   const series = SERIES.map((n, i) => opt(i, n, i === 0)).join('');
   const lines = Array.from({ length: 6 }, (_, i) => `<label class="admin-item-field"><span>Dòng ${i + 1}</span><select data-ai-aff aria-label="Thuộc tính dòng ${i + 1}"><option value="">Không chọn</option>${aff}</select><input data-ai-val type="number" min="0" step="1" hidden aria-label="Giá trị dòng ${i + 1}"></label>`).join('');
   modal(`<section class="admin-item-form"><header><h3>Tạo vật phẩm theo ý</h3></header>
