@@ -2,7 +2,7 @@
    Chuyen tu js/main.js cua ban goc: moi phu buoc co dinh 60 lan/giay + noi suy vi tri khi ve.
    Phan gan nut / doi tab da chuyen sang React (ui/*.jsx) — loop.js chi giu mo phong, ve, luu.
    Import theo dung thu tu <script> trong index.html goc de giu thu tu khoi tao toan cuc. */
-import { W, $, STAGES, WORLD, inWorld, fmt, esc } from './core';
+import { W, $, STAGES, WORLD, ZONES, inWorld, fmt, esc } from './core';
 import { obsLoad } from './mapobs';
 import { loadJData } from './jdata';
 import { autoSpendAttrs, autoSpendSkills } from './stats';
@@ -11,7 +11,7 @@ import { R, H, zoneOf, inZone, tick, recalc } from './combat';
 import { S, newSave, save, pickSlot, load, offlineGains, setS, setSlot } from './save';
 import { RW } from './rewards';
 import { matAdd, matHave } from './recipes';
-import { CV, img, isMobileUI, resizeArena, snapCamera, draw, setCanvas } from './render';
+import { CV, img, isMobileUI, preloadHeroSprites, preloadZoneSprites, resizeArena, snapCamera, draw, setCanvas } from './render';
 import { initWorldChat } from './chat';
 import { mpWire, mpTick } from './mpworld';
 import { presenceTick } from './presenceV127';
@@ -59,7 +59,7 @@ export const fullFps = () => { const p = uiPrefs(); return p.saver ? false : (is
 export const saverStep = () => (isMobileUI() ? 4 : 2);
 export function applyUiPrefs() { const p = uiPrefs(); document.documentElement.style.setProperty('--fs', String(UI_FS[p.fs])); document.body.classList.toggle('saver', p.saver); document.body.classList.toggle('compact', p.compact); document.body.classList.toggle('inv-border-glow', p.invBorderGlow); document.body.classList.toggle('chat-transparency', p.chatTransparency); }
 export function setUiPref(o) { Object.assign(uiPrefs(), o); try { localStorage.setItem(UI_KEY, JSON.stringify(UIP)); } catch (e) { /* che do rieng tu */ } applyUiPrefs(); fitApp(); }
-export function onZoneChange(z) { obsLoad(z.id); [H.x, H.y] = inWorld(H.x, H.y); for (const e of R.enemies) [e.x, e.y] = inWorld(e.x, e.y); for (const d of R.ground) [d.x, d.y] = inWorld(d.x, d.y); snapCamera(); R.bgImg = z.bg ? img(z.bg) : null; playMusic(z.id); preloadZoneSounds(z); if (curTab === 'log') refresh(); }
+export function onZoneChange(z) { obsLoad(z.id); [H.x, H.y] = inWorld(H.x, H.y); for (const e of R.enemies) [e.x, e.y] = inWorld(e.x, e.y); for (const d of R.ground) [d.x, d.y] = inWorld(d.x, d.y); snapCamera(); R.bgImg = z.bg ? img(z.bg) : null; playMusic(z.id); preloadZoneSounds(z); preloadZoneSprites(z); preloadZoneSprites(ZONES[Math.min(ZONES.length - 1, Math.floor((S.lvl || 1) / 12))]); preloadHeroSprites(); if (curTab === 'log') refresh(); }
 export function onStageChange() { if (curTab === 'log') refresh(); }
 export function onLevelUp() { if (S.autoPts === true) { autoSpendAttrs(); autoSpendSkills(); } autoEquipAll(); if (!R.quiet) { checkHints(); updateDots(); renderPad(); dotGift(); if (LV_MS.some(m => m[0] === S.lvl)) toast(`Đạt mốc cấp ${S.lvl}: nhận quà ở nút 🎁`); } }
 const STEP = 1 / 60, MAX_STEPS = 10, LERP_MAX = 120;
