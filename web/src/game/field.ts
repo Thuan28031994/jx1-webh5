@@ -17,7 +17,7 @@ const COARSE = typeof matchMedia === 'function' && (matchMedia('(pointer: coarse
 export const FIELD_MOBS = { cell: 400, perCell: 2, max: COARSE ? 110 : 240, aggro: 240, leash: 520, wander: 50, respawn: 5.6 };
 /* Cờ chay: luu rieng tu toggle trong Cài đặt Auto. R.field chi sat khi dang o bãi (không tháp / Tống Kim / bí cảnh trum). */
 export const fieldMode = () => !!(S && S.fieldMode);
-export const fieldActive = () => fieldMode() && !!R.field && !R.tower && !R.tk && !R.wbArena && !R.petRealm;
+export const fieldActive = () => fieldMode() && !!R.field && !R.tower && !R.tk && !R.wbArena && !R.petRealm && !R.mvboss;
 /* Hook gỡ lỗi (cùng kiểu window.__mini): xem bãi quái khi thử chế độ. */
 try { (window as any).__field = () => ({ mode: fieldMode(), active: fieldActive(), slots: R.field ? R.field.slots.length : 0, quest: R.field && R.field.quest, enemies: R.enemies.length, aggro: R.enemies.filter(e => e.aggro).length, zone: R.field && R.field.key }); } catch (e) { /* bo qua */ }
 

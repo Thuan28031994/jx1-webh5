@@ -70,6 +70,7 @@ import {
 import { backFromBossArena, wbTick, wbVictory } from './worldboss';
 import { dgTick, dgRoomCleared, dgFail } from './hoatdong';
 import { kyngoTick } from './kyngo';
+import { mvAddDamage, mvbossFinish, mvbossTick, mvbossVictory } from './mavuong';
 import { ktcOnBossKill, buffXp } from './ktc';
 import { tyvoDamageCap, tyvoDailyTick, tyvoFighterAI, tyvoSpawnOpponent, tyvoStop, tyvoWin } from './tyvo';
 import { S } from './save';
@@ -215,6 +216,7 @@ function heroHit(a, e) {
   if (R.petRageT > 0) tot *= R.petRageMult || 1.1;         // Ho Khiếu: dòn pet manh hơn
   tot = Math.max(1, tot);
   e.hp -= tot; e.hitT = 0.12; if (e.act !== 'at') { e.act = 'hurt'; e.actT = 0; npcSfx(MON[e.tid].anim, 'hurt', 0.3); }
+  if (R.mvboss && e.mvBoss) mvAddDamage(tot);   // Ma Vuong Thao Phat (f35): cong don sat thuong len boss
   if (a.stun && Math.random() * 100 < a.stun) e.stun = 0.8;
   if (R.P.leech) heal(tot * R.P.leech / 100, true);
   if (R.P.manaLeech) R.mana = Math.min(R.P.mana, R.mana + tot * R.P.manaLeech / 100);
@@ -369,7 +371,7 @@ function heroAttack() {
 function enemyAI(e, dt) {
   if (e.stun > 0) { e.stun -= dt; return; }
   if (e.regen > 0 && e.hp < e.max) e.hp = Math.min(e.max, e.hp + e.max * e.regen * dt);   // bien the tuan: Hoi huyet
-  if (e.poison > 0) { e.poison -= dt; e.hp -= e.poisonDmg * dt; }
+  if (e.poison > 0) { e.poison -= dt; e.hp -= e.poisonDmg * dt; if (R.mvboss && e.mvBoss) mvAddDamage(e.poisonDmg * dt); }
   if (e.homeX !== undefined && fieldIdle(e, dt)) return;   // bãi quái rãnh: đi tuần / truy thu (field.ts)
   const d = Math.hypot(H.x - e.x, H.y - e.y), reach = e.ranged ? 200 : e.r + 24;
   e.face = H.x >= e.x ? 1 : -1; e.dir = dirOf(H.x - e.x, H.y - e.y);
@@ -394,13 +396,13 @@ export function tick(dt) {
   if (R.deadT > 0) { R.deadT -= dt; if (R.deadT <= 0) { R.life = P.life; R.mana = P.mana; S.wave = 1; if (R.wbArena) backFromBossArena(); else spawnWave(); } return; }
   R.life = Math.min(P.life, R.life + P.regen * dt); R.mana = Math.min(P.mana, R.mana + P.manaRegen * dt);
   autoPotion(dt);
-  if (S.autoTownHp && !R.town && (R.tpCd || 0) <= 0 && !R.wbArena && !R.tower && !R.tk && !R.gboss && !R.petRealm && !R.tyvo && !R.dg
+  if (S.autoTownHp && !R.town && (R.tpCd || 0) <= 0 && !R.wbArena && !R.tower && !R.tk && !R.gboss && !R.mvboss && !R.petRealm && !R.tyvo && !R.dg
     && R.life < P.life * (S.townHpAt ?? 20) / 100) goTown();   // Ve thanh khi HP duoi nguong (Tho Dia Phu hoi phuc nhanh)
   if (R.hurtT > 0) R.hurtT -= dt;
   for (const k of ['poisonT', 'burnT', 'coldT']) if (H[k] > 0) H[k] = Math.max(0, H[k] - dt);   // status tren nhan vat (Doc / Dong / Hoa cua Tuyet chieu)
   if (R.tpCd > 0) R.tpCd -= dt;
   if (R.potCd) { R.potCd.life = Math.max(0, R.potCd.life - dt); R.potCd.mana = Math.max(0, R.potCd.mana - dt); }
-  goldBossTick(dt); petTick(dt); wbTick(dt); dgTick(dt); kyngoTick(dt);  // phan thuong: trum Hoang Kim, dong hanh, Boss The Gioi, Hoat dong giang ho, Ky Ngo (f27)
+  goldBossTick(dt); petTick(dt); wbTick(dt); dgTick(dt); kyngoTick(dt); mvbossTick(dt);  // phan thuong: trum Hoang Kim, dong hanh, Boss The Gioi, Hoat dong giang ho, Ky Ngo (f27), Ma Vuong (f35)
   if (R.town) { townTick(dt); return; }                                // trong thanh (Tho Dia Phu)
   if (fieldActive()) fieldTick(dt);                                    // bãi quái: sinh lai o trống (field.ts)
   R.activeT = (R.activeT || 0) + dt;                                    // thoi gian danh quai thuc (không tinh tab an, trong thanh, Luyen Công) -> S.kps
@@ -410,6 +412,7 @@ export function tick(dt) {
     if (R.spawnT > 0) { R.spawnT -= dt; return; }
     R.lootWait = 0;
     if (R.wbArena) return;                                 // bí cảnh boss: không sinh đợt quái thường
+    if (R.mvboss) return;                                  // Ma Vuong (f35): boss da sinh boi mvStart, khong sinh dot thuong
     if (R.tyvo) { tyvoSpawnOpponent(); return; }              // Tỷ Võ: sinh đối thủ (luôn có 1 địch)
     if (R.tower) towerSpawn(); else if (R.tk) tkSpawn(); else if (R.gboss) gbossSpawn(); else { spawnWave(); if (goldBossDue()) spawnGoldBoss(); }
     return;
@@ -427,7 +430,7 @@ export function tick(dt) {
   // Bãi quái: thời gian chỉ tính lúc giao tranh (đi xa quái không bị coi là đánh quá lâu).
   // Tháp: stall theo tiến triển — 45 giây phải giảm >1% tổng máu quái, không thì tự rời tháp.
   if (R.tower) towerStallTick(dt);
-  else if (!R.tyvo && (!fieldActive() || alive().some(e => e.aggro && Math.hypot(e.x - H.x, e.y - H.y) < FIELD_MOBS.leash))) {
+  else if (!R.tyvo && !R.mvboss && (!fieldActive() || alive().some(e => e.aggro && Math.hypot(e.x - H.x, e.y - H.y) < FIELD_MOBS.leash))) {
     R.stall += dt; if (R.stall > 45) stallOut();
   }
   if (R.life <= 0) heroDeath();
@@ -517,6 +520,7 @@ function waveCleared() {
   if (R.dg) { dgRoomCleared(); return; }              // Hoat dong giang ho: phong ke tiep / thang tran
   if (R.wbArena) { wbVictory(); return; }                  // hạ Boss Thế Giới: thưởng Vỏ Sò, không cộng ải
   if (R.gboss) { gbossCleared(); return; }                 // Boss Bang (f31): dot kep tiep / chien thang
+  if (R.mvboss) { mvbossVictory(); return; }               // Ma Vuong (f35): ha boss truoc gio = thang loi
   if (R.tk) { tkCleared(); return; }                       // Tong Kim: dot kep tiep / chien thang
   if (R.tower) { towerCleared(); return; }                 // thap thu thach: len tang, khong doi ai
   heal(R.P.life * 0.15, true); R.mana = Math.min(R.P.mana, R.mana + R.P.mana * 0.2); // dieu tuc giua cac dot
@@ -541,6 +545,7 @@ function heroDeath() {
   if (R.tyvo) { tyvoStop(false, 'loss'); return; }          // Tỷ Võ: gục = đứt chuỗi, giữ nguyên tiến trình
   if (R.tk) { tkExit(true, false); return; }               // gục ở Tống Kim: kết thúc trận, vẫn nhận lệnh
   if (R.gboss) { gbossExit(true, false); return; }         // gục ở Boss Bang: kết thúc trận, vẫn tính đợt đã qua
+  if (R.mvboss) { mvbossFinish(false, true); return; }     // gục ở Ma Vương (f35): kết thúc lượt, giữ sát thương đã gây
   if (R.tower) { towerExit(true); return; }               // gục trong thap: roi thap, khong lui ai
   if (R.dg) { dgFail(); return; }                          // gục trong phó bản/thuyền/boss tuần: kết thúc hoạt động
   if (R.wbArena) { log('<span class="dim">Boss Thế Giới vẫn chờ ở bí cảnh — hồi sức rồi vào lại.</span>'); return; }
