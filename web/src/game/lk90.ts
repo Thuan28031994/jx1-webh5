@@ -24,6 +24,11 @@ export function lk90Skills() {
   return SK90().filter(s => lv[s.id]).map(s => Object.assign({}, s, { lkLv: lv[s.id] }));
 }
 export const lk90Learned = id => !!learned().lv[id];
+/* Cấp sách của 1 chiêu 90 — nguồn cấp DUY NHẤT của chiêu bậc 90 (stats.skillLv / calc /
+   skillsys / survival / tab võ công đều đọc qua đây, KHÔNG qua S.sk hay điểm kỹ năng) */
+export const lk90Lv = id => learned().lv[id] || 0;
+/* Id các chiêu 90 đã lĩnh ngộ (để các vòng lặp theo S.sk duyệt gộp thêm) */
+export const lk90Ids = () => Object.keys(learned().lv).filter(id => learned().lv[id] > 0).map(Number);
 
 /* Lĩnh ngộ 1 chiêu: −1 Mật Tịch, miễn phí khi đã chuyển sinh (bkOk) */
 export function lk90Learn(id) {

@@ -53,7 +53,7 @@ import { donKhoModal } from './donkho';
 import { THAN_MA_MAX, THAN_MA_TRAIN_BONUS, horseLevel, isThanMa } from './horse';
 import { logModal } from './consolelog';
 import { bindQuickBar, jrModal, quickBarHTML } from './journal';
-import { BOOK_ICONS, BOOK_NAMES, bookPoints, RW, titleModal, titleProgress, titleWorn, useBook } from './rewards';
+import { BOOK_ICONS, BOOK_NAMES, bookPoints, RW, openGiftTab, REBORN_MAX, rebornLevelAt, titleModal, titleProgress, titleWorn, useBook } from './rewards';
 import { CHALLENGES, chalName, clanModal, dexSet, dexSetsDone } from './depth';
 import { SK_KIND_VI, skKind, skillAuraHint, skillBuffHint, skillTypeLabel } from './skillsys';
 import { bindBuilds, buildsHTML, chargePointRefund, pointRefundCost, respecModal, respecQuote, sumObj } from './builds';
@@ -835,11 +835,13 @@ function renderChar() {
   const deadWorn = Object.values(S.eq).filter(it => it && !reqOk(it));
   const res = ELEM.map(e => `<span>Kháng ${ELEM_VI[e]}</span><span>${Math.round(P.res[e])}%</span>`);
   const tp = titleProgress(), tw = titleWorn();
+  const rbN = (RW().stat || {}).reborn || 0, rbFull = rbN >= REBORN_MAX, rbNeed = rebornLevelAt(rbN);
+  const rbLabel = rbFull ? `Chuyển sinh ${rbN}/${REBORN_MAX} · đã tối đa` : S.lvl >= rbNeed ? `Chuyển sinh ${rbN}/${REBORN_MAX} · đủ cấp!` : `Chuyển sinh · cần cấp ${rbNeed}`;
   const books = ['ttk', 'vlmt'].map(k => {
     const have = matHave('misc', k), used = (S.useN || {})[k] || 0;
     return `<div class="book-row"><img src="${BOOK_ICONS[k]}" alt="" loading="lazy"><div class="book-info"><b>${BOOK_NAMES[k]}</b><small class="dim">Đang có ${have} · đã dùng ${used}/${BOOK_USE_MAX}</small></div><button class="btn sm" data-bk="${k}" ${have ? '' : 'disabled'}>Dùng</button></div>`;
   }).join('');
-  $('#t-char').innerHTML = `<div class="card"><b style="color:${SERIES_COL[f.series]}">${esc(f.n)}</b> · hệ ${SERIES[f.series]} · Cấp ${S.lvl}${S.chal ? ` · <b>Thử thách ${chalName()}</b>` : ''}<div class="char-power-row"><small class="dim">Lực chiến ${fmt(R.power)}</small></div><div class="char-title-row"><small class="char-title-worn dim" title="${tw ? `Tên danh hiệu: ${esc(tw.n)}` : 'Tên danh hiệu: Chưa đeo'}">Tên danh hiệu: ${tw ? `<b style="color:#f3d88a">«${esc(tw.n)}»</b>` : 'Chưa đeo'}</small></div><div class="char-actions-row"><button class="btn sm title-count-btn" id="bTitle">Danh hiệu ${tp.owned}/${tp.total}</button><button class="btn sm detail-count-btn" id="bPower">Chi tiết</button></div></div>
+  $('#t-char').innerHTML = `<div class="card"><b style="color:${SERIES_COL[f.series]}">${esc(f.n)}</b> · hệ ${SERIES[f.series]} · Cấp ${S.lvl}${S.chal ? ` · <b>Thử thách ${chalName()}</b>` : ''}<div class="char-power-row"><small class="dim">Lực chiến ${fmt(R.power)}</small></div><div class="char-title-row"><small class="char-title-worn dim" title="${tw ? `Tên danh hiệu: ${esc(tw.n)}` : 'Tên danh hiệu: Chưa đeo'}">Tên danh hiệu: ${tw ? `<b style="color:#f3d88a">«${esc(tw.n)}»</b>` : 'Chưa đeo'}</small></div><div class="char-actions-row"><button class="btn sm title-count-btn" id="bTitle">Danh hiệu ${tp.owned}/${tp.total}</button><button class="btn sm detail-count-btn" id="bPower">Chi tiết</button><button class="btn sm" id="bReborn">${rbLabel}</button></div></div>
     ${deadWorn.length ? `<div class="reqbad"><b>⚠ ${deadWorn.length} món đang mặc chưa đủ điều kiện nên KHÔNG có tác dụng:</b> ${deadWorn.map(it => esc(it.n) + ' (' + esc(reqProblems(it).join('; ')) + ')').join(' · ')}</div>` : ''}
     <div class="eqgrid">${eq}</div>
     <p class="dim small">Dòng ẩn (2, 4, 6) của mỗi món mở khi hệ nhân vật hoặc 2 món liên kết <b>tương sinh</b> với hệ món đó (${elementCycle}). Đang mở: ${SLOTS.filter(([k]) => S.eq[k] && S.eq[k].mag.length > 1).map(([k, vi]) => `${vi} ${hiddenActive(S.eq[k])}/${Math.floor(S.eq[k].mag.length / 2)}`).join(' · ') || '—'}</p>
@@ -871,6 +873,7 @@ function renderChar() {
     };
   }
   $('#bTitle').onclick = () => titleModal(); $('#bPower').onclick = powerModal; $('#bSugAt').onclick = suggestModal; $('#bRespecAt').onclick = () => respecModal('attr', renderChar);
+  $('#bReborn').onclick = () => openGiftTab('reborn');
   document.querySelectorAll('#t-char [data-bk]').forEach(b => b.onclick = () => useBook(b.dataset.bk));
   document.querySelectorAll('#t-char .minus').forEach(b => b.onclick = () => { if (R.tyvo) { toast('Không thể đổi chỉ số trong lúc Tỷ Võ'); return; } unspendAttr(b.dataset.a); });
   document.querySelectorAll('#t-char .slot .it').forEach(b => b.onclick = () => itemModal(findItem(b.dataset.uid), b.parentNode.dataset.slot));
@@ -971,14 +974,15 @@ function skillModal(id) {
 }
 function renderSkill() {
   const f = FAC[S.fac];
+  const lk = (RW().lk90 || {}).lv || {};   // cấp sách của chiêu bậc 90 (không nằm ở S.sk)
   const rows = f.skills.map(id => {
-    const s = SK[id], L = S.sk[id] || 0, act = isAttack(s);
+    const s = SK[id], is90 = String(s.learn) === '90', L = is90 ? (lk[id] || 0) : (S.sk[id] || 0), act = isAttack(s);
     const a = act && L ? activeInfo(R.P, s, skillLv(id)) : null;   // sat thuong hien thi theo cap hieu luc (gom +cap trang bi)
     const kind = skKind(s), hint = skillBuffHint(s) || skillAuraHint(s);
     return `<div class="skl${S.lvl < s.req ? ' lock' : ''}${R.P.main.id === +id ? ' main' : ''}" data-id="${id}">
       <img class="sic" src="${esc(s.ic || '')}" alt=""><div class="info"><b>${esc(s.n)}</b> <span class="tag${act ? ' attack' : kind !== 'passive' && kind !== 'none' ? ' ' + kind : ''}">${skillTypeLabel(s)}</span>
       <small>Cấp yêu cầu ${s.req}${a ? ` · ${fmt(a.tot)} sát thương · ${a.targets > 1 ? 'nhiều mục tiêu' : 'đơn mục tiêu'}` : ''}${hint ? ` · ${hint}` : ''}</small></div>
-      <span class="lvl">${L}/${s.max}</span><span class="pm"><button class="plus" data-id="${id}" title="Cộng 1 điểm" ${canLearn(s) ? '' : 'disabled'}>+</button><button class="minus" data-id="${id}" title="Rút lại 1 điểm" ${L > 0 ? '' : 'disabled'}>−</button><button class="skinfo" data-id="${id}" title="Thông tin kỹ năng">i</button></span>
+      <span class="lvl">${L}/${s.max}</span><span class="pm"><button class="plus" data-id="${id}" title="Cộng 1 điểm" ${canLearn(s) ? '' : 'disabled'}>+</button><button class="minus" data-id="${id}" title="Rút lại 1 điểm" ${(is90 ? (S.sk[id] || 0) > 0 : L > 0) ? '' : 'disabled'}>−</button><button class="skinfo" data-id="${id}" title="Thông tin kỹ năng">i</button></span>
       ${act && L ? `<div class="slots">Ô: ${[0, 1, 2, 3].map(i => `<button data-slot="${i}" data-sid="${id}" class="${(S.slots || [])[i] === +id ? 'on' : ''}">${i + 1}</button>`).join('')}</div>` : ''}</div>`;
   }).join('');
   $('#t-skill').innerHTML = buildsHTML() + `<h3>${esc(f.n)} <small>${S.skPts} điểm kỹ năng</small> <button class="btn sm" id="bSugSk">Gợi ý</button></h3><div class="card"><label><input type="checkbox" id="cRot" ${S.rot === false ? '' : 'checked'}> Xoay chiêu tự động khi farm: luân phiên các chiêu gán ở ô 1 đến 4 (phím R), luôn có 2 chiêu mạnh nhất, bỏ chiêu hết nội lực</label></div><p class="dim small">Chạm vào chiêu tấn công đã học để khóa làm chiêu chính${S.mainLock ? ' (<a id="bAutoMain">bỏ khóa</a>)' : ' (đang tự chọn chiêu mạnh nhất)'}.</p>${rows}`;
@@ -990,7 +994,7 @@ function renderSkill() {
   $('#cRot').onchange = () => toggleRot();
   const am = $('#bAutoMain'); if (am) am.onclick = () => { if (R.tyvo) { toast('Không thể đổi võ công trong lúc Tỷ Võ'); return; } S.mainLock = false; R.dirty = true; recalc(); renderSkill(); };
   bindBuilds(renderSkill);
-  document.querySelectorAll('#t-skill .skl').forEach(r => r.onclick = () => { if (R.tyvo) { toast('Không thể đổi võ công trong lúc Tỷ Võ'); return; } const s = SK[r.dataset.id]; if (isAttack(s) && S.sk[s.id]) { S.main = s.id; S.mainLock = true; R.dirty = true; recalc(); renderSkill(); toast('Chiêu chính: ' + s.n); } else skillModal(s.id); });
+  document.querySelectorAll('#t-skill .skl').forEach(r => r.onclick = () => { if (R.tyvo) { toast('Không thể đổi võ công trong lúc Tỷ Võ'); return; } const s = SK[r.dataset.id]; if (isAttack(s) && skillLv(s.id)) { S.main = s.id; S.mainLock = true; R.dirty = true; recalc(); renderSkill(); toast('Chiêu chính: ' + s.n); } else skillModal(s.id); });
 }
 
 /* ---------- the: tui do ---------- */
