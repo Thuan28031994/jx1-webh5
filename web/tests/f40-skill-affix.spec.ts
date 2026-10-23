@@ -145,3 +145,27 @@ test('allskill qua skillsys: thời lượng bùa lợi tính theo cấp hiệu 
   expect(await buffHintSec(page), 'cởi đồ: về 133 giây').toBe(133);
   assertNoErrors();
 });
+
+test('dòng chữ trên đồ: generic allskill hiện "Tất cả kỹ năng: +2 cấp", không còn "Kỹ năng #0"', async ({ page }) => {
+  await createCharacter(page);
+  // mở Bảng thử nghiệm -> Tạo vật phẩm theo ý (đường UI như f38)
+  await page.locator('#tabs button[data-t="more"]').click();
+  await page.locator('#t-more [data-account-tab="test"]').click();
+  await page.locator('#bAdmin').click();
+  await expect(page.locator('#mBody [data-ad="item"]')).toBeVisible();
+  await page.locator('#mBody [data-ad="item"]').click();
+  await expect(page.locator('#mBody [data-ai-aff]')).toHaveCount(6);
+  // nhãn dropdown của chính thuộc tính 139 cũng phải là chữ trên đồ
+  const optLabel = await page.evaluate(() => {
+    const sel = document.querySelector('#mBody [data-ai-aff]') as HTMLSelectElement;
+    const o = [...sel.options].find(x => x.value === '139');
+    return o ? o.textContent : null;
+  });
+  expect(optLabel).toBe('Tất cả kỹ năng: +2 cấp');
+  // chọn dòng 139 -> xem trước món đồ phải hiện đúng dòng chữ đó, không có "#0"
+  await page.locator('#mBody [data-ai-aff]').first().selectOption('139');
+  const lines = await page.evaluate(() => [...document.querySelectorAll('#aiPreview .sl div')].map(d => d.textContent || ''));
+  expect(lines.some(l => l.includes('Tất cả kỹ năng: +2 cấp'))).toBe(true);
+  expect(lines.some(l => l.includes('#0'))).toBe(false);
+  assertNoErrors();
+});
