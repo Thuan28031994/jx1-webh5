@@ -41,7 +41,7 @@ export function lk90Learn(id) {
     if (matHave('misc', 'bk90') < 1) return { ok: false, msg: 'Cần 1 Võ Lâm Mật Tịch (hoặc đã chuyển sinh để học miễn phí)' };
     matAdd('misc', 'bk90', -1);
   }
-  lv.lv[id] = 1; save();
+  lv.lv[id] = 1; R.dirty = true; save();
   log(`📜 Lĩnh ngộ <b class="up">${esc(s.n)}</b> (cấp 90${free ? ' · miễn phí đã chuyển sinh' : ' · −1 Võ Lâm Mật Tịch'}).`);
   return { ok: true, msg: `Lĩnh ngộ ${s.n} thành công!` };
 }
@@ -52,7 +52,7 @@ export function lk90Practice(id) {
   if (lv.lv[id] >= (s.max || 20)) return { ok: false, msg: 'Chiêu đã đạt cấp tối đa' };
   if (matHave('misc', 'bk90') < 1) return { ok: false, msg: 'Cần 1 Võ Lâm Mật Tịch để luyện tiếp' };
   matAdd('misc', 'bk90', -1);
-  lv.lv[id]++; save();
+  lv.lv[id]++; R.dirty = true; save();
   return { ok: true, msg: `Luyện ${s.n} lên cấp ${lv.lv[id]}` };
 }
 

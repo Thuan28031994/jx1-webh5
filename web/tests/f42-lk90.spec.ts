@@ -73,6 +73,12 @@ test('chiêu 90 luyện bằng sách: tab hiện cấp sách, vào được chi�
   await openSkillTab(page);
   await expect(page.locator(`.skl[data-id="${SK90}"] .lvl`), 'tab võ công phải hiện cấp sách 5/20 (trước f42: 0/20)').toHaveText('5/20');
 
+  /* game tự recalc ở tick chiến đấu kế tiếp khi R.dirty (lk90Learn/Practice phải đặt cờ
+     này — thiếu nó chiêu mới luyện không vào chiến đấu cho tới khi có sự kiện khác) */
+  await page.waitForFunction(() => {
+    const g = (window as any).__G;
+    return (g.R.P.actives || []).some((x: any) => x.id === 318);
+  }, null, { timeout: 8000 }).catch(() => {});
   const combat = await page.evaluate(() => {
     const g = (window as any).__G, P = g.R.P;
     const a = (P.actives || []).find((x: any) => x.id === 318);
