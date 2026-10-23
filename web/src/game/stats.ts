@@ -1,7 +1,7 @@
 // @ts-nocheck — chuyen tu vanilla JS: bat lai check tung file dan dan (xem README muc TypeScript)
 import { POT_TIER_LV, R, hitPercent, hitChance } from './combat';
 import { buffLuck } from './ktc';
-import { lk90Learned } from './lk90';
+import { lk90Ids, lk90Lv } from './lk90';
 import {
   $,
   CRIT_MULT,
@@ -87,7 +87,8 @@ export function weaponCode(eq) {
    +cap rieng cho mot chieu khong bao gio toi duoc luc tung chieu, con bang ky nang tinh sat thuong
    theo cap goc — nguoi choi thay dong cong cap "khong hoat dong". (calc() co lvOf noi bo rieng vi
    khi tinh P chua ton tai.) */
-export function skillLv(id) { const L = S.sk[id] || 0; return L ? L + (R.P ? (R.P.plusSkill || 0) + ((R.P.skAdd && R.P.skAdd[id]) || 0) : 0) : 0; }
+export function skillLv(id) { const s = SK[id]; if (s && String(s.learn) === '90') return lk90Lv(id);   // chiêu bậc 90: cấp nằm ở lk90.lv (luyện bằng Mật Tịch), không qua S.sk/điểm/cộng trang bị
+  const L = S.sk[id] || 0; return L ? L + (R.P ? (R.P.plusSkill || 0) + ((R.P.skAdd && R.P.skAdd[id]) || 0) : 0) : 0; }
 
 /* Ky nang bi dong: mon vu khi (chi tinh khi dung dung loai vu khi), noi cong, hao quang... */
 function passiveApplies(s, name, p, wc) {
@@ -150,10 +151,14 @@ export function calc(eq) {
   // ky nang bi dong
   const wc = weaponCode(eq), plus = av(A, 'allskill_v');
   const P = { A, plusSkill: plus, skAdd, innerAdd: { poison: 0, cold: 0, fire: 0, light: 0 } };
-  const lvOf = id => S.sk[id] + plus + (skAdd[id] || 0);
-  for (const id in S.sk) {
-    const s = SK[id]; if (!s || !S.sk[id] || isAttack(s) || !skApplies(s)) continue;
-    const L = lvOf(id);
+  /* Cấp hiệu lực chuẩn của calc: chiêu thường = S.sk + cộng trang bị; chiêu bậc 90 = cấp
+     sách ở lk90.lv. Ba vòng lặp kỹ năng dưới đây duyệt GỘP cả hai kho id — trước đây chỉ
+     đọc S.sk nên chiêu 90 luyện bằng sách không hề vào chiến đấu / Lực Chiến. */
+  const lkIds = lk90Ids();
+  const allSkIds = [...new Set([...Object.keys(S.sk), ...lkIds.map(String)])];
+  const lvOf = id => { const s = SK[id]; return s && String(s.learn) === '90' ? lk90Lv(id) : (S.sk[id] || 0) + plus + (skAdd[id] || 0); };
+  for (const id of allSkIds) {
+    const s = SK[id]; const L = lvOf(id); if (!s || !L || isAttack(s) || !skApplies(s)) continue;
     for (const name in s.attr) {
       if (SKIP_PASSIVE.test(name)) continue;
       const p = skVal(s, name, L);
@@ -229,14 +234,14 @@ export function calc(eq) {
   P.ranged = ranged;
   // ky nang chu dong + cong don addskilldamageN (tham so 1 = id ky nang duoc tang, tham so 3 = %)
   P.skillBonus = {};
-  for (const id in S.sk) {
-    const s = SK[id]; if (!s || !S.sk[id]) continue;
+  for (const id of allSkIds) {
+    const s = SK[id]; if (!s || !lvOf(id)) continue;
     for (const name in s.attr) if (name.startsWith('addskilldamage')) {
       const p = skVal(s, name, lvOf(id)); if (p && p[0]) P.skillBonus[p[0]] = (P.skillBonus[p[0]] || 0) + p[2];
     }
   }
   P.actives = [];
-  for (const id in S.sk) { const s = SK[id]; if (S.sk[id] && isAttack(s)) P.actives.push(activeInfo(P, s, lvOf(id))); }
+  for (const id of allSkIds) { const s = SK[id]; if (s && lvOf(id) && isAttack(s)) P.actives.push(activeInfo(P, s, lvOf(id))); }
   P.basic = basicAttack(P);
   // noi luc: chieu ton nhieu hon (hoi noi luc + thuoc tu uong) chi dung duoc mot phan thoi gian, con lai danh thuong
   const income = P.manaRegen + manaPotRate(lv);
@@ -494,7 +499,7 @@ export function autoSpendAttrs() {
   if (spent) R.dirty = true;
   return spent;
 }
-export function canLearn(s) { if (String(s.learn) === '90' && !lk90Learned(s.id)) return false;   // chiêu 90: chỉ mở qua Lĩnh ngộ
+export function canLearn(s) { if (String(s.learn) === '90') return false;   // chiêu 90: chỉ tăng bằng Võ Lâm Mật Tịch (lk90), KHÔNG cộng điểm — cổng này cũng chặn autoSpendSkills + gợi ý
   return S.skPts > 0 && S.lvl >= s.req && (S.sk[s.id] || 0) < s.max; }
 
 /* ---------- Can bang ky nang theo bac (rieng game idle) ----------

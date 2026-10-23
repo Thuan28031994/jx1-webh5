@@ -2,6 +2,7 @@
 import { ELEM, SK, $, isAttack, rnd, skVal } from './core';
 import { H, POISON_TIME, R, applyPart, heal } from './combat';
 import { activeInfo, skillLv } from './stats';
+import { lk90Ids } from './lk90';
 import { S } from './save';
 import { addText, castFx } from './render';
 
@@ -53,10 +54,10 @@ const skPay = a => {
   }
   return true;
 };
-export const skillBuffActive = id => ((R.skillBuffUntil && R.skillBuffUntil[id]) || 0) > skClock() && !!S.sk[id];
+export const skillBuffActive = id => ((R.skillBuffUntil && R.skillBuffUntil[id]) || 0) > skClock() && skillLv(id) > 0;
 const skillBuffEnabled = id => !(S.buffOff || {})[id];
-export const skillAuraEnabled = id => !!S.sk[id] && !(S.auraOff || {})[id];
-const auraList = () => Object.keys(S.sk || {}).filter(id => S.sk[id] && SK[id] && skKind(SK[id]) === 'aura' && skillAuraEnabled(id)).map(Number);
+export const skillAuraEnabled = id => skillLv(id) > 0 && !(S.auraOff || {})[id];
+const auraList = () => [...new Set([...Object.keys(S.sk || {}), ...lk90Ids().map(String)])].filter(id => SK[id] && skKind(SK[id]) === 'aura' && skillAuraEnabled(id)).map(Number);
 const auraActive = id => auraList().includes(+id);
 /* Ky nang do co hieu luc tinh vao chi so nhan vat khong (stats.calc gate):
    bi dong luon co; bua loi chi khi dang bat; vong sang thuong bat (trừ vong sang doc —
@@ -93,7 +94,7 @@ export function stateIcons() {
   const now = skClock();
   for (const id in (R.skillBuffUntil || {})) {
     const until = R.skillBuffUntil[id];
-    if (until > now && SK[id] && S.sk[id]) out.push({ ic: SK[id].ic, t: until - now, n: SK[id].n });
+    if (until > now && SK[id] && skillLv(id) > 0) out.push({ ic: SK[id].ic, t: until - now, n: SK[id].n });
   }
   return out;
 }
@@ -156,9 +157,10 @@ export function skillSysTick(dt) {
   const now = skClock(), timers = R.skillBuffUntil || (R.skillBuffUntil = {}), cd = R.skillBuffCd || (R.skillBuffCd = {});
   for (const id in timers) if (timers[id] > 0 && timers[id] <= now) { timers[id] = 0; R.dirty = true; }
   const fight = R.enemies.some(e => !e.dead && e.hp > 0);
-  for (const id in S.sk) {
-    const s = SK[id], level = S.sk[id] || 0; if (!s || !level) continue;
-    const kind = skKind(s), L = skillLv(+id), cost = skCost(s, L), duration = skDur(s, L);
+  for (const id of [...new Set([...Object.keys(S.sk), ...lk90Ids().map(String)])]) {
+    const s = SK[id]; if (!s) continue;
+    const kind = skKind(s), L = skillLv(+id); if (!L) continue;
+    const cost = skCost(s, L), duration = skDur(s, L);
     const costLife = skCostLife(s), payment = { cost, costLife }, reserve = costLife ? 0.3 : 0.15;
     if (kind === 'buff' && S.autoBuff !== false && skillBuffEnabled(id) && !skillBuffActive(id)) {
       if (duration < 5) {
