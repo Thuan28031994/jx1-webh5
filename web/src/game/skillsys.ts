@@ -1,7 +1,7 @@
 // @ts-nocheck — chuyen tu vanilla JS: bat lai check tung file dan dan (xem README muc TypeScript)
 import { ELEM, SK, $, isAttack, rnd, skVal } from './core';
 import { H, POISON_TIME, R, applyPart, heal } from './combat';
-import { activeInfo } from './stats';
+import { activeInfo, skillLv } from './stats';
 import { S } from './save';
 import { addText, castFx } from './render';
 
@@ -35,7 +35,6 @@ const skDur = (s, L) => {
 };
 const skCost = (s, L) => (skVal(s, 'skill_cost_v', L) || [0])[0] || 0;
 const skClock = () => R.skillClock || 0;
-const skillLv = id => (S.sk[id] || 0) + ((R.P && R.P.plusSkill) || 0);
 /* Tra phi thi tri: cost = 2 la mat sinh luc, con lai mat noi luc (theo cost trong KSkill) */
 const skCostLife = s => !!s && s.cost === 2;
 const skCanPay = (a, reserve = null) => a.costLife
@@ -110,7 +109,7 @@ export function curseMod(e) {
   const now = skClock(), m = { res: {}, def: 0, ar: 0, dmg: 0, ret: 0, slow: 0, move: 0, regen: 0, poison: 0, crit: 0 };
   for (const id in e.curse) {
     if (e.curse[id] <= now) continue;
-    const s = SK[id], L = (S.sk[id] || 1) + ((R.P && R.P.plusSkill) || 0); if (!s) continue;
+    const s = SK[id], L = Math.max(1, skillLv(id)); if (!s) continue;
     m.any = true;
     for (const name in s.attr) {
       if (/^(skill_|missle_|addskilldamage)/.test(name)) continue;
@@ -137,7 +136,7 @@ function auraDamageTick(dt) {
     const A = AURA_DMG[id]; if (!A || !R.P || !R.P.main || R.town || R.deadT > 0) continue;
     const timers = R.auraClock || (R.auraClock = {}); timers[id] = (timers[id] || 0) - dt;
     if (timers[id] > 0) continue; timers[id] = A.every;
-    const L = Math.min(30, (S.sk[id] || 1) + (R.P.plusSkill || 0));
+    const L = Math.min(30, Math.max(1, skillLv(id)));
     const raw = activeInfo(R.P, auraSkill(id), L).parts.poison || 0; if (!(raw > 0)) continue;
     for (const e of R.enemies) {
       if (e.dead || e.hp <= 0 || Math.hypot(e.x - H.x, e.y - H.y) > A.rad) continue;

@@ -75,7 +75,7 @@ import {
 } from './render';
 import { RW, achCheck, questTick, towerExit } from './rewards';
 import { S, save } from './save';
-import { activeInfo, heroSeries } from './stats';
+import { activeInfo, heroSeries, skillLv } from './stats';
 import { addItem, closeModal, log, modal, refresh, toast } from './ui';
 import type { SurvivalState } from './types';
 
@@ -166,7 +166,7 @@ function svActives() {
 }
 function svPassives() { const f = FAC[S.fac]; return f.skills.filter(id => SK[id] && !isAttack(SK[id]) && SK[id].req <= Math.max(1, S.lvl) && Object.keys(SK[id].attr).length); }
 function pasKind(id) { const keys = Object.keys(SK[id].attr).join(' '); return PAS_KIND.find(([re]) => re.test(keys)) || PAS_KIND[PAS_KIND.length - 1]; }
-function svSkillLv(id) { const s = SK[id]; return S.sk[id] ? S.sk[id] + (R.P.plusSkill || 0) : clamp(Math.floor((S.lvl - s.req) / 3) + 1, 1, 20); }
+function svSkillLv(id) { const s = SK[id]; return S.sk[id] ? skillLv(id) : clamp(Math.floor((S.lvl - s.req) / 3) + 1, 1, 20); }
 function svInfo(id) { return SV.info[id] || (SV.info[id] = activeInfo(R.P, SK[id], svSkillLv(id))); }
 function svBonus(k) { let v = 0; for (const id in SV.pas) if (pasKind(id)[1] === k) v += SV.pas[id]; return v; }
 function svOptions() {

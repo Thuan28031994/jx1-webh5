@@ -74,6 +74,9 @@ export function petElemOf(tid) {
 /* ---------- thuoc tinh ma thuat ---------- */
 export const ATTR_ID = Object.fromEntries((J.attr || []).map((n, i) => [n, i]));
 export function attrText(name, p) {
+  // allskill_v tong quat (tham so 3 = 0): khong co ten ky nang rieng -> hien "Tat ca ky nang"
+  // (template goc tra ten theo id 0 se ra "Ky nang #0: +2 cap")
+  if (name === 'allskill_v' && !(p[2] > 0)) return 'Tất cả kỹ năng: +' + (p[0] || 0) + ' cấp';
   const t = J.attrDesc[name];
   if (!t) return name + ': ' + p.filter(v => v).join(' / ');
   return t.replace(/#([a-zA-Z])([123A])([-+~%]?)/g, (m, k, i, flag) => {
